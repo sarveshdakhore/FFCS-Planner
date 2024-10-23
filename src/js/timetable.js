@@ -116,10 +116,19 @@ const updateUserData = async (newTablePref) => {
         lastMerge = JSON.parse(JSON.stringify(newTablePref));
         console.log('User data updated successfully');
     } catch (error) {
-        console.error('Error updating user data:', error);
+        // console.error('Error updating user data:', error);
     }
 };
 
+// Function to run updateUserData every 1 minute
+const startAutoUpdate = (newTablePref) => {
+    setInterval(async () => {
+        await updateUserData(newTablePref);
+    }, 60000); // 60000 milliseconds = 1 minute
+};
+
+// Start the auto-update with timetableStoragePref
+startAutoUpdate(timetableStoragePref);
 // Function to hide the div
 function hideUserOpt() {
     try {
