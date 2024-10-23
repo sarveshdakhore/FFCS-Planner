@@ -52,30 +52,30 @@ onAuthStateChanged(auth, async (user) => {
         // Show user options and hide login button after successful login
         showUserOpt();
         login.style.display = 'none';
-        // console.log('User already signed in: ', user.displayName);
-        // // Show the user options div and hide the login button
-        // const userDocSnapTable = await getUserTablePref(user.email); // Await the promise
-        // const userDocRef = doc(db, 'users_tablepref', user.email);
-        // if (userDocSnapTable !== false) {
-        //     console.log('User data found:', userDocSnapTable);
-        //     if (JSON.stringify(userDocSnapTable) === JSON.stringify(timetableStoragePref)) {
-        //         return;
-        //     } else {
-        //         // Update the user's tablepref field
-        //         const newData = JSON.stringify(mergeTables(userDocSnapTable, timetableStoragePref))
+        console.log('User already signed in: ', user.displayName);
+        // Show the user options div and hide the login button
+        const userDocSnapTable = await getUserTablePref(user.email); // Await the promise
+        const userDocRef = doc(db, 'users_tablepref', user.email);
+        if (userDocSnapTable !== false) {
+            console.log('User data found:', userDocSnapTable);
+            if (JSON.stringify(userDocSnapTable) === JSON.stringify(timetableStoragePref)) {
+                return;
+            } else {
+                // Update the user's tablepref field
+                const newData = JSON.stringify(mergeTables(userDocSnapTable, timetableStoragePref))
                 
-        //         await updateUserData(newData); // Await the update
-        //         timetableStoragePref = JSON.parse(newData.tablepref);
-        //         location.reload();
-        //     }
-        // } else {
-        //     // Create a new user document if it doesn't exist
-        //     const initialData = {
-        //         tablepref: JSON.stringify(timetableStoragePref),
-        //     };
-        //     await setDoc(userDocRef, initialData);
-        //     console.log('New user document created');
-        // }
+                await updateUserData(newData); // Await the update
+                timetableStoragePref = JSON.parse(newData.tablepref);
+                location.reload();
+            }
+        } else {
+            // Create a new user document if it doesn't exist
+            const initialData = {
+                tablepref: JSON.stringify(timetableStoragePref),
+            };
+            await setDoc(userDocRef, initialData);
+            console.log('New user document created');
+        }
         
     } else {
         console.log('No user is signed in.');
@@ -176,15 +176,20 @@ const mergeTables = (userTables, newTables) => {
                 counter++;
             }
 
-            // Add the unique table name to the set
-            tableNameSet.add(tableName);
+            // Check if the table data is the same as any table in userTables
+            const isDuplicate = userTables.some(userTable => JSON.stringify(userTable.data) === JSON.stringify(newTable.data));
 
-            // Update the table name and add to mergedTables
-            mergedTables.push({
-                ...newTable,
-                name: tableName,
-                id: mergedTables.length // Update the ID to be sequential
-            });
+            if (!isDuplicate) {
+                // Add the unique table name to the set
+                tableNameSet.add(tableName);
+
+                // Update the table name and add to mergedTables
+                mergedTables.push({
+                    ...newTable,
+                    name: tableName,
+                    id: mergedTables.length // Update the ID to be sequential
+                });
+            }
         });
 
         return mergedTables;
