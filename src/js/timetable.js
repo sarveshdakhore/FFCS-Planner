@@ -2581,7 +2581,7 @@ var timetableStoragePref = [
 ];
 
 window.activeTable = timetableStoragePref[0];
-
+window.timetableStoragePref=timetableStoragePref;
 $(() => {
     /*
         Click event for the add table button

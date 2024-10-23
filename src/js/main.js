@@ -44,6 +44,8 @@ const lastUpdate = require('../../package.json')['lastUpdate'];
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut} from 'firebase/auth';
 import { getAnalytics } from 'firebase/analytics';
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+
 
 // Firebase configuration
 const firebaseConfig = {
@@ -60,6 +62,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
+const db = getFirestore(app); // Firestore database reference
+
+
 const userOptDiv = document.getElementById('user-opt');
 const login = document.getElementById('login-btn');
 // Create GoogleAuthProvider instance
