@@ -368,17 +368,3 @@ tr.sortable-chosen1 td {
 
 
 
-#login-btn:hover {
-    background-color: #f5f5f5;
-    border-color: #ddd;
-    transition: 0.3s;
-}
-
-#login-btn img {
-    vertical-align: middle;
-}
-
-#login-btn span {
-    vertical-align: middle;
-}
-
