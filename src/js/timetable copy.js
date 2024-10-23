@@ -12,7 +12,7 @@ window.clashMap = clashMap;
 // Assuming slotsExistInNonLectureFormat is a Set
 slotsExistInNonLectureFormat.add('');
 slotsExistInNonLectureFormat.add('SLOTS');
-let lastMerge = null;
+var lastMerge = null;
 // ********************* Global Functions *********************
 
 // ================== Sign in/Sign up ==================
@@ -106,14 +106,14 @@ const updateUserData = async (newTablePref) => {
     }
     const userDocRef = doc(db, 'users_tablepref', userEmail);
     console.log('Updating user data...', lastMerge,'\n\n', newTablePref);
-    if (JSON.stringify(newTablePref) === JSON.stringify(lastMerge)) {
-        console.log('No changes to user data');
-        return;
+    // if (JSON.stringify(newTablePref) === JSON.stringify(lastMerge)) {
+    //     console.log('No changes to user data');
+    //     return;
         
-    }
+    // }
     try {
         await updateDoc(userDocRef, { tablepref: JSON.stringify(newTablePref) });
-        lastMerge = JSON.parse(JSON.stringify(newTablePref));
+        lastMerge = await getUserTablePref(userEmail);
         console.log('User data updated successfully');
     } catch (error) {
         console.error('Error updating user data:', error);
@@ -212,7 +212,7 @@ const handleLogin = () => {
                     await updateUserData(newData); // Await the update
                     console.log("newData",newData)
                     timetableStoragePref = newData;
-                    lastMerge = JSON.parse(JSON.stringify(newData));
+                    lastMerge = await getUserTablePref(user.email);
                     updateLocalForage();
                     location.reload();
                 }
@@ -222,7 +222,7 @@ const handleLogin = () => {
                     tablepref: JSON.stringify(timetableStoragePref),
                 };
                 await setDoc(userDocRef, initialData);
-                lastMerge = JSON.parse(JSON.stringify(initialData));
+                lastMerge = await getUserTablePref(user.email);
                 console.log('New user document created');
             }
             // Show user options and hide login button after successful login
@@ -1372,6 +1372,7 @@ function updateDataJsonFromCourseList() {
         };
         activeData.push(courseData);
     });
+    updateLocalForage();
 }
 
 function updateTeacherInAttackDataOnTeacherSave(
@@ -1634,9 +1635,9 @@ function courseRemove(courseToRemove) {
         var courseII = getCourseNameAndFacultyFromTr(trElement)[0];
         if (courseToRemove === courseII) {
             removeCourseFromTimetable(dataCourseValue);
+            updateLocalForage();
             removeCourseFromCourseList(dataCourseValue);
             removeCourseFromSubject(dataCourseValue);
-            updateLocalForage();
         }
     });
 }
@@ -1826,14 +1827,12 @@ function liClick() {
             updateDataJsonFromCourseList();
             revertRerrange();
             rearrangeTeacherRefresh();
-            
         } else {
             radioButton.checked = true; // This radio button is now the currently selected one
             addOnRadioTrue(radioButton);
             updateDataJsonFromCourseList();
             revertRerrange();
             rearrangeTeacherRefresh();
-            
         }
     } catch (error) {
         console.error('Error in liClick function:', error);
@@ -3736,8 +3735,7 @@ window.initializeTimetable = () => {
             showAddTeacherDiv();
             activateSortableForCourseList();
             addEventListnerToCourseList();
-            makeRadioTrueOnPageLoad();
-            lastMerge = JSON.parse(JSON.stringify(timetableStoragePref));
+            console.log(lastMerge);
             // Renaming the 'Default Table' option
             $('#tt-picker-dropdown .tt-picker-label a')
                 .first()
@@ -3747,9 +3745,9 @@ window.initializeTimetable = () => {
             timetableStoragePref.slice(1).forEach(function (table) {
                 addTableToPicker(table.id, table.name);
             });
+            
         })
         .catch(console.error);
-        
 };
 
 /*
