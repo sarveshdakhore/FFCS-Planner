@@ -1,0 +1,1759 @@
+﻿<!-- 
+Copyright (C) 2024  Sarvesh Dakhore
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>FFCS Planner</title>
+        <link rel="manifest" href="./manifest.webmanifest" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link
+            rel="icon"
+            sizes="192x192"
+            href="./images/icons/icon-192x192.png"
+        />
+        <link rel="apple-touch-icon" href="./images/icons/icon-192x192.png" />
+        <link rel="icon" href="./images/favicon.png" />
+        <script src="./js/main.js" type="module"></script>
+        <meta name="author" content="Vatsal Joshi" />
+        <meta name="author" content="Sarvesh Dakhore" />
+        <meta name="subject" content="Education" />
+        <meta name="google-adsense-account" content="ca-pub-7726311284531292" />
+        <meta
+            name="Description"
+            content="Visualize and make the most optimum timetable for yourself."
+        />
+        <meta
+            name="Keywords"
+            content="VIT,University,Vellore,chennai,FFCS,ffcPlanner,ffcsPlanner,course,registration,timetable,visualize,ffcsonthego new,FFCS NEW,ffcsonthego pref, VIT Vellore, Vellore institute of technology, VIT chennai, FFCS VIT, VIT FFCS, FFCS VIT Planner, Save Vit FFCS, FFCS On The Go, FFCSOnTheGo, FFCSOnTheGo new, FFCS On The Go New, FFCS, Fully Flexible Credit System, Sarvesh Dakhore, sarveshdakhore, gdsc, gdsc vit"
+        />
+        <meta name="distribution" content="Global" />
+        <meta name="country" content="India" />
+        <meta name="theme-color" content="#008080" />
+        <meta property="og:title" content="FFCS Planner" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://ffcs.sarveshdakhore.in/" />
+        <meta property="og:image" content="./images/og_image.png" />
+        <meta
+            property="og:description"
+            content="Visualize and make the most optimum timetable for yourself."
+        />
+        <meta property="og:site_name" content="FFCS Planner" />
+        <meta name="google-adsense-account" content="ca-pub-7726311284531292" />
+    </head>
+
+    <body>
+        <!-- Service worker to check for an update -->
+        <script>
+            // Check if service workers are supported
+            if ('serviceWorker' in window.navigator) {
+                // Use the window load event to keep the page load performant
+                window.addEventListener('load', () => {
+                    window.navigator.serviceWorker
+                        .register(`${window.location.origin}/sw.js`)
+                        .then((reg) => {
+                            setInterval(() => {
+                                reg.update();
+                            }, 10 * 60 * 1000);
+                        });
+                });
+
+                window.navigator.serviceWorker.addEventListener(
+                    'controllerchange',
+                    function () {
+                        if (
+                            jQuery &&
+                            bootstrap &&
+                            $('#update-modal').length != 0
+                        ) {
+                            new bootstrap.Modal(
+                                $('#update-modal').get(0),
+                            ).show();
+                        } else {
+                            var result = window.confirm(
+                                'A new version of FFCS Planner is available! Would you like to reload the page?',
+                            );
+                            if (result) {
+                                window.location.reload();
+                            }
+                        }
+                    },
+                );
+            }
+        </script>
+
+        <!-- Google Analytics -->
+        <!-- Google tag (gtag.js) -->
+        <script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-9ND40HTZ32"
+        ></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+
+            gtag('config', 'G-9ND40HTZ32');
+        </script>
+
+        <!-- Navbar -->
+        <nav class="navbar fixed-top navbar-expand-md navbar-light bg-light">
+            <div class="container-xl px-3 py-1">
+                <a class="navbar-brand" href="/">FFCS Planner</a>
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbar"
+                    aria-controls="navbarNavDarkDropdown"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            
+                <div
+                    id="navbar"
+                    class="collapse navbar-collapse justify-content-between"
+                    style="white-space: nowrap;"
+                >
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a
+                                id="campus"
+                                class="nav-link dropdown-toggle"
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            ></a>
+                            <ul
+                                class="dropdown-menu dropdown-menu-light mb-3"
+                                aria-labelledby="campus"
+                            >
+                                <li>
+                                    <a class="dropdown-item" href="#Vellore"
+                                        >Vellore Campus</a
+                                    >
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#Chennai"
+                                        >Chennai Campus</a
+                                    >
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+            
+                    <div class="navbar-nav flex-row flex-wrap md-auto">
+                        <!-- Google Login Button -->
+                        <button id="login-btn" class="btn btn-light btn-block" style="border: 1px solid #ddd; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; padding: 0px 10px; max-width: 250px; white-space: nowrap;">
+                            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_64dp.png" alt="Google logo" style="width: 20px; margin-right: 10px;">
+                            <span style=" font-weight: bold; color: #555;">Sign in&nbsp;&nbsp;</span>
+                        </button>
+                        <div id="user-opt">
+                            &nbsp;&nbsp;
+                            <div class="dropdown d-inline" style="display: none;">
+                                <a
+                                    id="logout-button"
+                                    class="btn btn-outline-secondary dropdown-toggle nav-btn-outline"
+                                    href="#"
+                                    role="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    ><i class="fas fa-user"></i
+                                    >&nbsp;&nbsp;User</a
+                                >
+                
+                                <ul
+                                    class="dropdown-menu dropdown-menu-light"
+                                    aria-labelledby="logout-button"
+                                >
+                                    <li>
+                                        <a
+                                            rel="noopener"
+                                            class="dropdown-item"
+                                            id = "logout-link"
+                                            href=""
+                                            target="_blank"
+                                        >
+                                            <i class="fas fa-sign-out" aria-hidden="true"></i>
+                                            &nbsp;&nbsp;<span>Logout</span>
+                                        </a>
+                                    </li>
+                
+                                    <li>
+                                        <a
+                                            rel="noopener"
+                                            class="dropdown-item"
+                                            href="https://www.linkedin.com/sharing/share-offsite/?url=https://ffcs.sarveshdakhore.in/"
+                                            target="_blank"
+                                            id="username-edit"
+                                        >
+                                            <i class="fas fa-edit"></i>
+                                            &nbsp;&nbsp;<span>set username</span>
+                                        </a>
+                                    </li>
+                
+                                    <li>
+                                        <a
+                                            rel="noopener"
+                                            class="dropdown-item"
+                                            href="https://twitter.com/intent/tweet?text=FFCS made hassle free! https://ffcs.sarveshdakhore.in/"
+                                            target="_blank"
+                                        >
+                                            <i class="fas fa-hand-grab-o"></i>
+                                            &nbsp;&nbsp;<span>Friends</span>
+                                        </a>
+                                    </li>
+                
+                                    <li>
+                                        <a
+                                            class="dropdown-item"
+                                            href="whatsapp://send?text=FFCS made hassle free! https://ffcs.sarveshdakhore.in/"
+                                            target="_blank"
+                                        >
+                                            <i class="fas fa-location-arrow"></i>
+                                            &nbsp;&nbsp;<span>Track FFCS</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        &nbsp;&nbsp;
+                        <div class="dropdown d-inline">
+                            <a
+                                id="share-button"
+                                class="btn btn-outline-secondary dropdown-toggle nav-btn-outline"
+                                href="#"
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                ><i class="fas fa-share"></i
+                                >&nbsp;&nbsp;Share</a
+                            >
+            
+                            <ul
+                                class="dropdown-menu dropdown-menu-light"
+                                aria-labelledby="share-button"
+                            >
+                                <li>
+                                    <a
+                                        rel="noopener"
+                                        class="dropdown-item"
+                                        href="https://www.facebook.com/sharer/sharer.php?message=FFCS made hassle free!&u=https://ffcs.sarveshdakhore.in/"
+                                        target="_blank"
+                                    >
+                                        <i class="fab fa-facebook"></i>
+                                        <span>&nbsp;&nbsp;Facebook</span>
+                                    </a>
+                                </li>
+            
+                                <li>
+                                    <a
+                                        rel="noopener"
+                                        class="dropdown-item"
+                                        href="https://www.linkedin.com/sharing/share-offsite/?url=https://ffcs.sarveshdakhore.in/"
+                                        target="_blank"
+                                    >
+                                        <i class="fab fa-linkedin"></i>
+                                        <span>&nbsp;&nbsp;LinkedIn</span>
+                                    </a>
+                                </li>
+            
+                                <li>
+                                    <a
+                                        rel="noopener"
+                                        class="dropdown-item"
+                                        href="https://twitter.com/intent/tweet?text=FFCS made hassle free! https://ffcs.sarveshdakhore.in/"
+                                        target="_blank"
+                                    >
+                                        <i class="fab fa-twitter"></i>
+                                        <span>&nbsp;&nbsp;Twitter</span>
+                                    </a>
+                                </li>
+            
+                                <li>
+                                    <a
+                                        class="dropdown-item"
+                                        href="whatsapp://send?text=FFCS made hassle free! https://ffcs.sarveshdakhore.in/"
+                                        target="_blank"
+                                    >
+                                        <i class="fab fa-whatsapp"></i>
+                                        <span>&nbsp;&nbsp;WhatsApp</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+            
+                        <a
+                            rel="noopener"
+                            href="https://github.com/sarveshdakhore/FFCSonTheGo"
+                            target="_blank"
+                            hidden
+                        >
+                            <button
+                                class="btn btn-outline-secondary nav-btn-outline ms-2"
+                                type="button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#about-modal"
+                            >
+                                <i class="fab fa-github"></i>&nbsp;&nbsp;GitHub
+                            </button>
+                        </a>
+            
+                        <a
+                            rel="noopener"
+                            href="https://sarveshdakhore.in/rd/how_to_use_ffcs_planner"
+                            target="_blank"
+                        >
+                            <button
+                                class="btn btn-outline-secondary nav-btn-outline ms-2"
+                                type="button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#about-modal"
+                            >
+                                <i class="fa fa-bicycle" aria-hidden="true"></i
+                                >&nbsp;&nbsp;How To Use ?
+                            </button>
+                        </a>
+                        
+
+
+                    </div>
+                </div>
+            </div>
+                </div>
+            </div>
+        </nav>
+        <!-- End of navbar -->
+        <button id="scrollButton">
+            <img
+                style="height: 50px; width: 50px"
+                id="scrollImg"
+                src="./images/top.svg"
+                alt="Scroll to top"
+            />
+        </button>
+        <div style="text-align: center; display: none" id="mobile_message">
+            <p
+                style="
+                    padding: 6px 6%;
+                    margin: 0%;
+                    color: red;
+                    font-weight: 500;
+                "
+            >
+                For optimal use of all features, please tilt your device to
+                landscape mode or switch to a larger screen.
+            </p>
+        </div>
+
+        <!-- #1 - Course Panel -->
+        <div class="container-xl">
+            <div class="card">
+                <div class="card-header text-left fw-bold header-button">
+                    <div class="c_pref" style="width: 28%; align-self: center">
+                        Course Preferences
+                    </div>
+                    <div class="text-left header-button-element">
+                        <button
+                            id="tt-teacher-add"
+                            type="button"
+                            class="btn btn-success"
+                        >
+                            <i class="fas fa-plus"></i> &emsp13;Teachers
+                        </button>
+                        <button
+                            id="tt-subject-add"
+                            type="button"
+                            class="btn btn-primary"
+                        >
+                            <!-- data-toggle="modal"
+                            data-target="#exampleModal" -->
+                            <i class="fas fa-plus"></i> &emsp13;Course
+                        </button>
+
+                        <button
+                            style="display: none"
+                            id="tt-subject-done"
+                            class="btn btn-primary ms-1 me-1"
+                            type="button"
+                            onclick="closeEditPref1()"
+                        >
+                            <span>&nbsp;Done</span>
+                        </button>
+                        <button
+                            style="display: none"
+                            id="tt-subject-collapse"
+                            class="btn btn-outline-secondary ms-1 me-1"
+                            type="button"
+                            onclick="editPrefCollapse()"
+                        >
+                            <i class="fas fa-chevron-up"></i>
+                            <span>&nbsp;&nbsp;Collapse All</span>
+                        </button>
+                        <div
+                            class="form-check form-switch"
+                            style="margin-top: 7px; display: none"
+                            id="div-auto-focus"
+                        >
+                            &emsp14;
+                            <label
+                                class="form-check-label"
+                                for="tt-auto-focus-switch"
+                                >Auto Focus</label
+                            >
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                id="tt-auto-focus-switch"
+                                checked
+                            />
+                        </div>
+                        <div
+                            class="form-check form-switch"
+                            style="margin-top: 7px; display: none"
+                            id="tt-sub-edit-switch-div"
+                        >
+                            &emsp14;
+                            <label
+                                class="form-check-label"
+                                for="tt-sub-edit-switch"
+                                >Course Edit</label
+                            >
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                id="tt-sub-edit-switch"
+                            />
+                        </div>
+                        <button
+                            id="tt-subject-edit"
+                            class="btn btn-warning ms-1 me-1"
+                            type="button"
+                            onclick="editPrefAddOn()"
+                        >
+                            <!-- onclick="editPref()" -->
+                            <i class="fas fa-pencil"></i>
+                            <span>&nbsp;&nbsp;Edit</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    style="
+                        padding: 0%;
+                        display: flex;
+                        flex-direction: row;
+                        min-height: 440px;
+                        max-height: 440px;
+                    "
+                    class="card-body"
+                >
+                    <section
+                        style="height: 440px"
+                        class="left-border left-box"
+                        id="subjectArea"
+                    ></section>
+
+                    <section class="left-border right-box">
+                        <h5
+                            id="edit_msg_"
+                            style="
+                                padding: 4.5%;
+                                padding-bottom: 0;
+                                display: none;
+                            "
+                        >
+                            Click on the Teacher to edit it.
+                        </h5>
+                        <!-- Attack slot div -->
+                        <div style="display: none" id="div-for-attack-slot">
+                            <hr class="text-center" />
+                            <div>
+                                <legend>Theory Occupied</legend>
+                                <h6></h6>
+                            </div>
+                            <hr />
+                            <div>
+                                <legend>Lab Occupied</legend>
+                                <h6></h6>
+                            </div>
+                        </div>
+
+                        <!-- add course div -->
+                        <div style="display: none" id="div-for-add-course">
+                            <div>
+                                <h4 style="padding: 4.5%; padding-bottom: 0">
+                                    Add Course
+                                </h4>
+                                <hr />
+                            </div>
+                            <form id="courseSaveForm">
+                                <div
+                                    style="
+                                        margin: 4.5%;
+                                        padding-top: 10px;
+                                        padding-bottom: 0;
+                                        padding-right: 0%;
+                                    "
+                                    class="modal-body"
+                                >
+                                    <label for="course-input_remove"
+                                        >&emsp14;Course</label
+                                    >
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="course-input_remove"
+                                        placeholder="CSE1001&emsp13;-&emsp13;Problem Solving and Programming"
+                                        autocomplete="off"
+                                        oninput="removeDotsLive(this)"
+                                    />
+                                    <div
+                                        style="
+                                            color: blue;
+                                            opacity: 50%;
+                                            margin-top: -5px;
+                                        "
+                                    >
+                                        &emsp14;Course Code & Name Seperated by
+                                        '
+                                        <b
+                                            style="
+                                                color: rgb(255, 0, 0);
+                                                font-weight: 700;
+                                                font-size: 20px;
+                                                margin-top: 100px;
+                                            "
+                                            >-</b
+                                        >
+                                        '
+                                    </div>
+
+                                    <label
+                                        style="margin-top: 15px"
+                                        for="credits-input"
+                                        >&emsp14;Credits</label
+                                    >
+                                    <input
+                                        id="credits-input"
+                                        class="form-control text-uppercase"
+                                        type="number"
+                                        style="max-width: 25%"
+                                        autocomplete="off"
+                                        placeholder="4"
+                                        min="0"
+                                        max="30"
+                                        step="0.5"
+                                    />
+                                    <span id="span-course-add"></span>
+                                    <br style="display: none" id="hide_br" />
+                                    <hr />
+                                </div>
+                                <div class="modal-footer">
+                                    <button
+                                        style="width: 30%"
+                                        type="submit"
+                                        class="btn btn-primary"
+                                        id="saveSubjectModal"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- add course ends here -->
+
+                        <!-- Course Edit starts here  -->
+                        <div style="display: none" id="div-for-edit-course">
+                            <div>
+                                <h4 style="padding: 4.5%; padding-bottom: 0">
+                                    Edit Course
+                                </h4>
+                                <hr />
+                            </div>
+                            <form id="courseEditSaveForm-1">
+                                <div
+                                    style="
+                                        margin: 4.5%;
+                                        padding-top: 10px;
+                                        padding-bottom: 0;
+                                        padding-right: 0%;
+                                    "
+                                    class="modal-body"
+                                >
+                                    <label for="course-input_edit"
+                                        >&emsp14;Course Name</label
+                                    >
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="course-input_edit"
+                                        placeholder="CSE1001 Problem Solving and Programming"
+                                        autocomplete="off"
+                                        oninput="removeDotsLive(this)"
+                                    />
+
+                                    <label
+                                        style="margin-top: 15px"
+                                        for="credits-input-edit"
+                                        >&emsp14;Credits</label
+                                    >
+                                    <div
+                                        hidden
+                                        id="course-input-edit-pre"
+                                    ></div>
+                                    <div
+                                        hidden
+                                        id="credit-input-edit-pre"
+                                    ></div>
+                                    <input
+                                        id="credits-input-edit"
+                                        class="form-control text-uppercase"
+                                        type="number"
+                                        style="max-width: 25%"
+                                        autocomplete="off"
+                                        placeholder="4"
+                                        min="0"
+                                        max="30"
+                                        step="0.5"
+                                    />
+
+                                    <span id="span-course-edit"></span>
+                                    <br
+                                        style="display: none"
+                                        id="hide_br-edit"
+                                    />
+                                    <hr />
+                                </div>
+                                <div class="modal-footer">
+                                    <button
+                                        type="button"
+                                        class="btn btn-danger"
+                                        id="deleteSubjectEdit"
+                                    >
+                                        Delete
+                                    </button>
+                                    &emsp14;&emsp14;
+                                    <button
+                                        style="width: 30%"
+                                        type="submit"
+                                        class="btn btn-primary"
+                                        id="saveSubjectEditModal"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Course Edit ends here -->
+
+                        <!-- add teacher starts -->
+
+                        <div id="div-for-add-teacher">
+                            <form id="teacherSaveForm">
+                                <div>
+                                    <h4
+                                        style="padding: 4.5%; padding-bottom: 0"
+                                    >
+                                        Add Teachers
+                                    </h4>
+                                    <hr />
+                                </div>
+                                <div
+                                    style="
+                                        margin: 4.5%;
+                                        padding-top: 10px;
+                                        padding-bottom: 0;
+                                        padding-right: 0%;
+                                    "
+                                >
+                                    <!--  course select option dropdown input -->
+                                    <label for="course-select-add-teacher"
+                                        >&emsp14;Course &emsp14;&emsp14;<a
+                                            id="course_link"
+                                            href=""
+                                            >Add Courses</a
+                                        ></label
+                                    >
+                                    <select
+                                        id="course-select-add-teacher"
+                                        class="form-select"
+                                        aria-label="Default select example"
+                                    ></select>
+                                    <br />
+
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                        "
+                                    >
+                                        <div style="width: 72%">
+                                            <label for="teacher-input_remove"
+                                                >&emsp14;Teacher Name</label
+                                            >
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="teacher-input_remove"
+                                                placeholder="KIM JONG UN"
+                                                autocomplete="off"
+                                                oninput="removeDotsLive(this)"
+                                            />
+                                        </div>
+                                        <div style="width: 2%"></div>
+                                        <div style="width: 26%">
+                                            <label for="color1-select"
+                                                >&emsp14;Color</label
+                                            >
+                                            <select
+                                                id="color1-select"
+                                                class="form-select"
+                                                onchange=""
+                                            >
+                                                <option
+                                                    value="rgb(214, 255, 214)"
+                                                    style="
+                                                        background-color: rgb(
+                                                            214,
+                                                            255,
+                                                            214
+                                                        );
+                                                    "
+                                                >
+                                                    Green
+                                                </option>
+                                                <option
+                                                    value="rgb(255, 228, 135)"
+                                                    style="
+                                                        background-color: rgb(
+                                                            255,
+                                                            228,
+                                                            135
+                                                        );
+                                                    "
+                                                    selected
+                                                >
+                                                    Orange
+                                                </option>
+                                                <option
+                                                    value="rgb(255, 205, 205)"
+                                                    style="
+                                                        background-color: rgb(
+                                                            255,
+                                                            205,
+                                                            205
+                                                        );
+                                                    "
+                                                >
+                                                    Red
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                        "
+                                    >
+                                        <div style="width: 58%">
+                                            <label
+                                                style="margin-top: 15px"
+                                                for="slot-input"
+                                                >&emsp14;Slots</label
+                                            >
+                                            <input
+                                                id="slot-input"
+                                                class="form-control text-uppercase"
+                                                type="text"
+                                                style="max-width: 100%"
+                                                autocomplete="off"
+                                                placeholder="A1+TA1"
+                                                oninput="removeSlotSplCharLive(this)"
+                                            />
+                                        </div>
+
+                                        <div style="width: 10%"></div>
+
+                                        <div style="width: 30%">
+                                            <label
+                                                style="margin-top: 15px"
+                                                for="venue-input"
+                                                >&emsp14;Venue</label
+                                            >
+                                            <input
+                                                id="venue-input"
+                                                class="form-control text-uppercase"
+                                                type="text"
+                                                style="max-width: 100%"
+                                                autocomplete="off"
+                                                placeholder="SJTG01"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <span id="span-teacher-add"></span>
+                                    <br id="hide_br_teacher" />
+                                    <hr />
+                                </div>
+                                <div class="modal-footer">
+                                    <button
+                                        class="btn btn-success"
+                                        type="button"
+                                        id="addMultipleTeacher"
+                                    >
+                                        <i class="fas fa-plus"></i>
+                                        <span
+                                            >&nbsp;&nbsp;Add Multiple</span
+                                        ></button
+                                    >&emsp13;
+                                    <button
+                                        style="width: 30%"
+                                        type="submit"
+                                        class="btn btn-primary"
+                                        id="saveTeacherModal"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- add teacher ends -->
+
+                        <!-- Edit Teacher starts Here -->
+
+                        <div id="div-for-edit-teacher" style="display: none">
+                            <form id="teacherSaveFormEdit">
+                                <div>
+                                    <h4
+                                        style="padding: 4.5%; padding-bottom: 0"
+                                    >
+                                        Edit Teachers
+                                    </h4>
+                                    <hr />
+                                </div>
+                                <div
+                                    style="
+                                        margin: 4.5%;
+                                        padding-top: 10px;
+                                        padding-bottom: 0;
+                                        padding-right: 0%;
+                                    "
+                                >
+                                    <!--  course select option dropdown input -->
+                                    <label for="teacher-edit-course">
+                                        Course
+                                    </label>
+                                    <input
+                                        disabled
+                                        type="text"
+                                        class="form-control"
+                                        id="teacher-edit-course"
+                                        placeholder="Course"
+                                        autocomplete="off"
+                                        oninput="removeDotsLive(this)"
+                                    />
+                                    <br />
+
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                        "
+                                    >
+                                        <div style="width: 72%">
+                                            <label
+                                                for="teacher-input_remove-edit"
+                                                >&emsp14;Teacher Name</label
+                                            >
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                id="teacher-input_remove-edit"
+                                                placeholder="KIM JONG UN"
+                                                autocomplete="off"
+                                                oninput="removeDotsLive(this)"
+                                            />
+                                            <input
+                                                hidden
+                                                disabled
+                                                type="text"
+                                                class="form-control"
+                                                id="teacher-input_remove-edit-pre"
+                                                placeholder="KIM JONG UN"
+                                                autocomplete="off"
+                                            />
+                                        </div>
+                                        <div style="width: 2%"></div>
+                                        <div style="width: 26%">
+                                            <label for="color1-select-edit"
+                                                >&emsp14;Color</label
+                                            >
+                                            <select
+                                                id="color1-select-edit"
+                                                class="form-select"
+                                                onchange=""
+                                            >
+                                                <option
+                                                    value="rgb(214, 255, 214)"
+                                                    style="
+                                                        background-color: rgb(
+                                                            214,
+                                                            255,
+                                                            214
+                                                        );
+                                                    "
+                                                >
+                                                    Green
+                                                </option>
+                                                <option
+                                                    value="rgb(255, 228, 135)"
+                                                    style="
+                                                        background-color: rgb(
+                                                            255,
+                                                            228,
+                                                            135
+                                                        );
+                                                    "
+                                                    selected
+                                                >
+                                                    Orange
+                                                </option>
+
+                                                <option
+                                                    value="rgb(255, 205, 205)"
+                                                    style="
+                                                        background-color: rgb(
+                                                            255,
+                                                            205,
+                                                            205
+                                                        );
+                                                    "
+                                                >
+                                                    Red
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                        "
+                                    >
+                                        <div style="width: 58%">
+                                            <label
+                                                style="margin-top: 15px"
+                                                for="slot-input-edit"
+                                                >&emsp14;Slots</label
+                                            >
+                                            <input
+                                                id="slot-input-edit"
+                                                class="form-control text-uppercase"
+                                                type="text"
+                                                style="max-width: 100%"
+                                                autocomplete="off"
+                                                placeholder="A1+TA1"
+                                                oninput="removeSlotSplCharLive(this)"
+                                            />
+                                        </div>
+
+                                        <div style="width: 10%"></div>
+
+                                        <div style="width: 30%">
+                                            <label
+                                                style="margin-top: 15px"
+                                                for="venue-input-edit"
+                                                >&emsp14;Venue</label
+                                            >
+                                            <input
+                                                id="venue-input-edit"
+                                                class="form-control text-uppercase"
+                                                type="text"
+                                                style="max-width: 100%"
+                                                autocomplete="off"
+                                                placeholder="SJTG01"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <span id="span-teacher-edit"></span>
+                                    <br id="hide_br_teacher-edit" />
+                                    <hr />
+                                </div>
+                                <div class="modal-footer">
+                                    <button
+                                        type="button"
+                                        class="btn btn-danger"
+                                        id="deleteTeacherEdit"
+                                    >
+                                        Delete
+                                    </button>
+                                    &emsp14;&emsp14;
+                                    <button
+                                        style="width: 30%"
+                                        type="submit"
+                                        class="btn btn-primary"
+                                        id="saveTeacherEdit"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Edit Teacher ends Here -->
+                    </section>
+                </div>
+
+                <div class="card-footer">
+                    <div class="row align-items-center justify-content-between">
+                        <div class="col-sm-auto my-1">
+                            <span id="last-update_remove" class="fw-bold"
+                                ><div
+                                    class="form-check form-switch attack-toggle"
+                                    style="margin-top: 7px"
+                                >
+                                    &emsp14;
+                                    <label
+                                        class="form-check-label"
+                                        for="attack-toggle"
+                                    >
+                                        Live FFCS Mode
+                                    </label>
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        id="attack-toggle"
+                                    /></div
+                            ></span>
+                        </div>
+
+                        <!-- _remove to remove the last updated text in the above span -->
+                        <div class="col-sm-auto my-1">
+                            <button
+                                id="save-panel-button"
+                                type="button"
+                                class="btn btn-light me-1"
+                            >
+                                Save TT
+                            </button>
+                            <button
+                                id="load-panel-button"
+                                type="button"
+                                class="btn btn-light me-1"
+                            >
+                                Upload TT
+                            </button>
+
+                            <button
+                                id="clear-course-button"
+                                type="button"
+                                class="btn btn-success"
+                            >
+                                Clear List
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of #1 - Course panel -->
+
+        <hr />
+
+        <!-- #2 - Timetable -->
+        <!-- Option buttons for the timetable -->
+        <div class="container-sm px-4">
+            <div id="option-buttons" class="row justify-content-between">
+                <div class="col-auto mb-2 text-center">
+                    <div class="btn-group" role="group">
+                        <div class="btn-group">
+                            <button
+                                id="tt-picker-button"
+                                class="btn btn-primary dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                course-list
+                                table
+                                aria-expanded="false"
+                            >
+                                Default Table
+                            </button>
+                            <ul id="tt-picker-dropdown" class="dropdown-menu">
+                                <li>
+                                    <table class="dropdown-item">
+                                        <td class="tt-picker-label">
+                                            <a
+                                                href="JavaScript:void(0);"
+                                                data-table-id="0"
+                                                >Default Table</a
+                                            >
+                                        </td>
+                                        <td>
+                                            <a
+                                                class="tt-picker-rename"
+                                                href="JavaScript:void(0);"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#rename-modal"
+                                                title="Rename"
+                                            >
+                                                <i
+                                                    class="fas fa-pencil-alt"
+                                                ></i>
+                                            </a>
+                                        </td>
+                                    </table>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button
+                            id="tt-picker-add"
+                            type="button"
+                            class="btn btn-primary"
+                            title="Add Table"
+                        >
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-auto mb-2 text-center">
+                    <button
+                        class="btn btn-success"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#download-modal"
+                    >
+                        <i class="fas fa-download"></i>
+                        <span>&nbsp;&nbsp;Download Timetable</span>
+                    </button>
+                    <button
+                        id="quick-toggle"
+                        class="btn btn-warning ms-1 me-1"
+                        type="button"
+                    >
+                        <i class="fas fa-eye"></i>
+                        <span>&nbsp;&nbsp;Enable Quick Visualization</span>
+                    </button>
+                    <button
+                        class="btn btn-danger"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#reset-modal"
+                    >
+                        <i class="fas fa-redo"></i>
+                        <span>&nbsp;&nbsp;Reset Table</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick selection tiles - Morning slots -->
+        <div
+            class="container-sm my-2 quick-buttons noselect"
+            style="display: none"
+        >
+            <div><table></table></div>
+        </div>
+        <!-- End of quick selection tiles -->
+
+        <!-- Timetable -->
+        <div class="container-xxl text-center noselect">
+            <div id="timetable" class="table-responsive">
+                <table class="table table-bordered mt-2 mb-0">
+                    <tr id="theory">
+                        <td class="day">THEORY <br />HOURS</td>
+                    </tr>
+                    <tr id="lab">
+                        <td class="day">LAB <br />HOURS</td>
+                    </tr>
+                    <tr id="mon" style="display: none">
+                        <td class="day">MON</td>
+                    </tr>
+                    <tr id="tue" style="display: none">
+                        <td class="day">TUE</td>
+                    </tr>
+                    <tr id="wed" style="display: none">
+                        <td class="day">WED</td>
+                    </tr>
+                    <tr id="thu" style="display: none">
+                        <td class="day">THU</td>
+                    </tr>
+                    <tr id="fri" style="display: none">
+                        <td class="day">FRI</td>
+                    </tr>
+                    <tr id="sat" style="display: none">
+                        <td class="day">SAT</td>
+                    </tr>
+                    <tr id="sun" style="display: none">
+                        <td class="day">SUN</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <!-- End of timetable -->
+
+        <!-- Quick selection tiles - Evening slots -->
+        <div
+            class="container-sm mt-3 quick-buttons noselect"
+            style="display: none"
+        >
+            <div><table></table></div>
+        </div>
+
+        <!-- End of quick selection tiles -->
+        <a
+            href="#course_list11"
+            class="sticky"
+            id="course_list11"
+            title="Go to Course List"
+        ></a>
+
+        <hr />
+
+        <!-- Course list table -->
+
+        <div class="container-xxl">
+            <blockquote>
+                <p class="text-black-50 px-3 fs-6 fw-light">
+                    Double click a course in the list below to load it back into
+                    the course panel.
+                </p>
+            </blockquote>
+
+            <div id="course-list" class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr class="table-success noselect">
+                            <th>Slot</th>
+                            <th>Course Code</th>
+                            <th>Course Title</th>
+                            <th>Faculty</th>
+                            <th>Venue</th>
+                            <th>Credits</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="courseList-tbody">
+                        <!-- Courses will be added here -->
+                    </tbody>
+
+                    <tfoot>
+                        <tr class="table-active">
+                            <td colspan="7">
+                                <strong>
+                                    Total Credits:
+                                    <span id="total-credits">0</span>
+                                </strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <!-- End of course list table -->
+        <!-- End of #2 -->
+
+        <hr />
+
+        <!-- #3 - Comments & Footer -->
+        <!-- Disqus comments -->
+        <div class="container-sm">
+            <!-- <div id="disqus_thread"></div> -->
+            New comment section coming soon...
+        </div>
+
+        <!-- Footer -->
+        <footer class="container-fluid text-center py-2">
+            <span>Made with <i class="fas fa-heart"></i> for VITians</span
+            ><br />
+            <span
+                >Copyright
+                <i class="fa fa-copyright" aria-hidden="true"> 2024</i></span
+            >
+            <p>
+                This is modified from
+                <a href="https://github.com/vatz88/FFCSonTheGo"
+                    >orignal repository</a
+                >(as of 1 Nov, 2023),
+                <a href="http://www.gnu.org/licenses/">Licence: GPL-3.0</a>
+            </p>
+        </footer>
+        <!-- End of #3 -->
+
+        <!-- The Update Modal -->
+        <div
+            id="update-modal"
+            class="modal fade"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabindex="-1"
+            aria-labelledby="reset-modal-label"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="update-modal-label">
+                            Update Available
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p>
+                            A new version of FFCS Planner is available! Would
+                            you like to reload the page? No data will be lost.
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-dismiss="modal"
+                            onclick="window.location.reload();"
+                        >
+                            Reload
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of update modal -->
+
+        <!-- The Rename Modal -->
+        <div
+            id="rename-modal"
+            class="modal fade"
+            tabindex="-1"
+            aria-labelledby="rename-modal-label"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 id="rename-modal-label" class="modal-title">
+                            Rename Table
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form onsubmit="return false;">
+                            <div class="mb-3">
+                                <label for="table-name" class="col-form-label">
+                                    Table Name
+                                </label>
+                                <input
+                                    id="table-name"
+                                    class="form-control"
+                                    type="text"
+                                    autocomplete="off"
+                                    placeholder="Morning Timetable"
+                                />
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            id="rename-tt-button"
+                            type="button"
+                            class="btn btn-success"
+                            data-bs-dismiss="modal"
+                        >
+                            Rename
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of rename modal -->
+
+        <!-- The Delete Modal -->
+        <div
+            id="delete-modal"
+            class="modal fade"
+            tabindex="-1"
+            aria-labelledby="delete-modal-label"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="delete-modal-label">
+                            Delete Table
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p>
+                            Are you sure you want to delete this table? This
+                            action cannot be undone.
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            id="delete-tt-button"
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-dismiss="modal"
+                        >
+                            Yes, I'm sure
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of delete modal -->
+
+        <!-- The Reset Modal -->
+        <div
+            id="reset-modal"
+            class="modal fade"
+            tabindex="-1"
+            aria-labelledby="reset-modal-label"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reset-modal-label">
+                            Reset Table
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p>
+                            Are you sure you want to reset this table? All
+                            selected courses will be erased.
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            id="reset-tt-button"
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-dismiss="modal"
+                        >
+                            Yes, I'm sure
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of reset modal -->
+
+        <!-- The Add Multiple Teachers Modal -->
+        <div
+            id="multiple-teacher-modal"
+            class="modal fade"
+            tabindex="-1"
+            aria-labelledby="reset-modal-label"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reset-modal-label">
+                            Add Multiple Teachers
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <ol>
+                            <li>Log in to VTOP.</li>
+                            <li>
+                                Click <strong>Academics</strong> &gt;
+                                <strong>Course Registration Allocation</strong>.
+                            </li>
+                            <li>Highlight and copy the list of teachers.</li>
+                            <li>Paste the list here.</li>
+                        </ol>
+                        <label for="teachers-multiple-input">Paste Here</label>
+                        <textarea
+                            class="form-control"
+                            id="teachers-multiple-input"
+                            placeholder="Copy the list from your VTOP course allocation and paste it here. And boom! All added at once."
+                            autocomplete="off"
+                        ></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            id="confirm-multiple-button"
+                            type="button"
+                            class="btn btn-primary"
+                            data-bs-dismiss="modal"
+                        >
+                            Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of Add Multiple Teachers Modal -->
+
+        <!-- The Switch Campus Modal -->
+        <div
+            id="switch-campus-modal"
+            class="modal fade"
+            tabindex="-1"
+            aria-labelledby="switch-campus-modal-label"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="switch-campus-modal-label">
+                            Switch Campus
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p>
+                            Are you sure you want to switch your campus? All
+                            data will be lost.
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal"
+                            onclick="window.location.hash = `#${window.campus}`"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-dismiss="modal"
+                            onclick="switchCampus()"
+                        >
+                            Yes, I'm sure
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End of switch campus modal -->
+
+        <!-- The Download Timetable Modal -->
+
+        <div
+            id="download-modal"
+            class="modal fade"
+            tabindex="-1"
+            aria-labelledby="reset-modal-label"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="download-modal-label">
+                            Download Timetable
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <button
+                            id="download-tt-button"
+                            type="button"
+                            class="btn btn-success w-100 mb-2"
+                        >
+                            <i class="fas fa-camera"></i>
+                            &nbsp;&nbsp;Download Timetable
+                        </button>
+                        <button
+                            id="download-course-list-button"
+                            type="button"
+                            class="btn btn-success w-100"
+                        >
+                            <i class="fas fa-camera"></i>
+                            &nbsp;&nbsp;Download Course List
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="./js/main.js" type="module"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                const scrollButton = document.getElementById('scrollButton');
+                const scrollImg = document.getElementById('scrollImg');
+                const targetElement = document.getElementById('course_list11');
+                const navbarHeight =
+                    document.getElementById('navbar').offsetHeight; // Replace 'navbar' with the id of your navbar
+
+                window.addEventListener('scroll', () => {
+                    const scrollPosition = window.pageYOffset;
+                    const targetPosition =
+                        targetElement.getBoundingClientRect().top +
+                        window.pageYOffset;
+
+                    if (scrollPosition >= targetPosition - navbarHeight) {
+                        targetElement.classList.add('sticky');
+                        // Rotate the SVG 180 degrees to become "go down" button
+                        scrollImg.style.transform = 'rotate(180deg)';
+                    } else {
+                        targetElement.classList.remove('sticky');
+                        // Reset the rotation to become "go up" button
+                        scrollImg.style.transform = 'rotate(0deg)';
+                    }
+                });
+
+                scrollButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+
+                    if (scrollImg.style.transform === 'rotate(180deg)') {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        const targetPosition =
+                            targetElement.getBoundingClientRect().top +
+                            window.pageYOffset -
+                            navbarHeight;
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth',
+                        });
+                    }
+                });
+            });
+        </script>
+
+        <!-- End of download timetable modal -->
+
+        <!-- Initializing Disqus -->
+        <!-- DO NOT EDIT THIS SECTION UNLESS NECESSARY -->
+
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.10.2/Sortable.min.js"></script>
+        <script src="./js/add_on.js"></script>
+
+        <!-- <script>
+            var disqus_config = function () {
+                this.page.url = 'https://ffcs.sarveshdakhore.in/'; // Replace PAGE_URL with your page's canonical URL variable
+                this.page.identifier = 'ffcsonthego_main_page'; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+            };
+
+            (function () {
+                var d = document,
+                    s = d.createElement('script');
+                s.src = 'https://ffcsonthegonew.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script> -->
+    </body>
+</html>
