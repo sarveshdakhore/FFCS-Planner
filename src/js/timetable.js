@@ -61,13 +61,18 @@ onAuthStateChanged(auth, async (user) => {
             if (JSON.stringify(userDocSnapTable) === JSON.stringify(timetableStoragePref)) {
                 return;
             } else {
-                // Update the user's tablepref field
-                const newData = JSON.stringify(mergeTables(userDocSnapTable, timetableStoragePref))
-                
-                await updateUserData(newData); // Await the update
-                timetableStoragePref = JSON.parse(newData.tablepref);
-                location.reload();
+                try {
+                    // Update the user's tablepref field
+                    const newData = JSON.stringify(mergeTables(userDocSnapTable, timetableStoragePref));
+                    
+                    await updateUserData(newData); // Await the update
+                    timetableStoragePref = JSON.parse(newData); // Corrected to parse the JSON string
+                    location.reload();
+                } catch (error) {
+                    console.error('Error updating user data:', error);
+                }
             }
+        }
         } else {
             // Create a new user document if it doesn't exist
             const initialData = {
