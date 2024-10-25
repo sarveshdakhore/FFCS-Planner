@@ -72,7 +72,6 @@ onAuthStateChanged(auth, async (user) => {
                     console.error('Error updating user data:', error);
                 }
             }
-        }
         } else {
             // Create a new user document if it doesn't exist
             const initialData = {
@@ -81,7 +80,6 @@ onAuthStateChanged(auth, async (user) => {
             await setDoc(userDocRef, initialData);
             console.log('New user document created');
         }
-        
     } else {
         console.log('No user is signed in.');
         // Hide the user options div and show the login button
