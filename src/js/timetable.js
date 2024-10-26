@@ -65,7 +65,11 @@ onAuthStateChanged(auth, async (user) => {
                 const newData = JSON.stringify(mergeTables(userDocSnapTable, timetableStoragePref))
                 
                 await updateUserData(newData); // Await the update
-                timetableStoragePref = JSON.parse(newData.tablepref);
+                if (typeof newData.tablepref === 'string') {
+                    timetableStoragePref = JSON.parse(newData.tablepref);
+                } else {
+                    timetableStoragePref = newData.tablepref;
+                }
                 location.reload();
             }
         } else {
