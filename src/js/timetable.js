@@ -678,7 +678,12 @@ function editPrefCollapse() {
 }
 // Function to run updateUserData every 1 minute
 const startAutoUpdate = (newTablePref) => {
+    if (!newTablePref) {
+        console.error('newTablePref is undefined');
+        return;
+    }
     setInterval(async () => {
+        console.log('Auto-update triggered with newTablePref:', newTablePref);
         await updateUserData(newTablePref);
     }, 60000); // 60000 milliseconds = 1 minute
 };
