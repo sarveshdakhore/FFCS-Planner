@@ -68,7 +68,7 @@ onAuthStateChanged(auth, async (user) => {
                 // Update the user's tablepref field
                 await updateUserData(mergedTables); // Await the update
                 timetableStoragePref = mergedTables;
-                console.log("timetableStoragePref",timetableStoragePref);
+                location.reload();
                 console.log("Reloaded");
             }
         } else {
