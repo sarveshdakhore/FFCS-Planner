@@ -685,7 +685,7 @@ const startAutoUpdate = (newTablePref) => {
     setInterval(async () => {
         console.log('Auto-update triggered with newTablePref:', newTablePref);
         await updateUserData(newTablePref);
-    }, 60000); // 60000 milliseconds = 1 minute
+    }, 6000); // 60000 milliseconds = 1 minute
 };
 
 // Start the auto-update with timetableStoragePref
