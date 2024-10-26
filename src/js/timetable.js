@@ -54,24 +54,21 @@ onAuthStateChanged(auth, async (user) => {
         login.style.display = 'none';
         console.log('User already signed in: ', user.displayName);
         // Show the user options div and hide the login button
-        const userDocSnapTable = await getUserTablePref(user.email); // Await the promise
+                const userDocSnapTable = await getUserTablePref(user.email);
         const userDocRef = doc(db, 'users_tablepref', user.email);
+        
         if (userDocSnapTable !== false) {
             console.log('User data found:', userDocSnapTable);
             if (JSON.stringify(userDocSnapTable) == JSON.stringify(timetableStoragePref)) {
                 return;
             } else {
-                // Update the user's tablepref field
-                const newData = JSON.stringify(mergeTables(userDocSnapTable, timetableStoragePref))
+                // Merge tables and parse the result
+                const mergedTables = mergeTables(userDocSnapTable, timetableStoragePref);
                 
-                await updateUserData(newData); // Await the update
-                if (typeof newData.tablepref === 'string') {
-                    timetableStoragePref = JSON.parse(newData.tablepref);
-                } else {
-                    timetableStoragePref = newData.tablepref;
-                }
-                //location.reload();
-                console.log("Reloaded")
+                // Update the user's tablepref field
+                await updateUserData(mergedTables); // Await the update
+                timetableStoragePref = mergedTables.tablepref;
+                console.log("Reloaded");
             }
         } else {
             // Create a new user document if it doesn't exist
