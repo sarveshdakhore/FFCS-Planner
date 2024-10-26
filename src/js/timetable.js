@@ -125,15 +125,7 @@ const updateUserData = async (newTablePref) => {
     }
 };
 
-// Function to run updateUserData every 1 minute
-const startAutoUpdate = (newTablePref) => {
-    setInterval(async () => {
-        await updateUserData(newTablePref);
-    }, 60000); // 60000 milliseconds = 1 minute
-};
 
-// Start the auto-update with timetableStoragePref
-startAutoUpdate(timetableStoragePref);
 // Function to hide the div
 function hideUserOpt() {
     try {
@@ -684,7 +676,15 @@ function openAllDropdowns() {
 function editPrefCollapse() {
     closeAllDropdowns();
 }
+// Function to run updateUserData every 1 minute
+const startAutoUpdate = (newTablePref) => {
+    setInterval(async () => {
+        await updateUserData(newTablePref);
+    }, 60000); // 60000 milliseconds = 1 minute
+};
 
+// Start the auto-update with timetableStoragePref
+startAutoUpdate(timetableStoragePref);
 // ------------------ Basic Ends Here ------------------
 
 // ================== Get From Something ==================
