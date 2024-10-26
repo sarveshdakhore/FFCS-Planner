@@ -59,6 +59,7 @@ onAuthStateChanged(auth, async (user) => {
         
         if (userDocSnapTable !== false) {
             console.log('User data found:', userDocSnapTable);
+            console.log('timetableStoragePref:', timetableStoragePref);
             if (JSON.stringify(userDocSnapTable) == JSON.stringify(timetableStoragePref)) {
                 return;
             } else {
@@ -68,7 +69,8 @@ onAuthStateChanged(auth, async (user) => {
                 // Update the user's tablepref field
                 await updateUserData(mergedTables); // Await the update
                 timetableStoragePref = mergedTables;
-                location.reload();
+                updateLocalForage();
+                //location.reload();
                 console.log("Reloaded");
             }
         } else {
