@@ -224,7 +224,7 @@ const handleLogin = () => {
                     console.log("newData",newData)
                     timetableStoragePref = newData;
                     lastMerge = JSON.parse(JSON.stringify(newData));
-                    updateUserData(newData);
+                    updateLocalForage();
                     location.reload();
                 }
             } else {
