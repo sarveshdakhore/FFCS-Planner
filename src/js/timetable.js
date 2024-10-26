@@ -677,19 +677,23 @@ function editPrefCollapse() {
     closeAllDropdowns();
 }
 // Function to run updateUserData every 1 minute
-const startAutoUpdate = (newTablePref) => {
-    if (!newTablePref) {
-        console.error('newTablePref is undefined');
+const startAutoUpdate = (getNewTablePref) => {
+    if (typeof getNewTablePref !== 'function') {
+        console.error('getNewTablePref is not a function');
         return;
     }
     setInterval(async () => {
+        const newTablePref = getNewTablePref();
         console.log('Auto-update triggered with newTablePref:', newTablePref);
         await updateUserData(newTablePref);
-    }, 6000); // 60000 milliseconds = 1 minute
+    }, 60000); // 60000 milliseconds = 1 minute
 };
 
-// Start the auto-update with timetableStoragePref
-startAutoUpdate(timetableStoragePref);
+// Function to get the latest timetableStoragePref
+const getLatestTimetableStoragePref = () => timetableStoragePref;
+
+// Start the auto-update with a function that returns the latest timetableStoragePref
+startAutoUpdate(getLatestTimetableStoragePref);
 // ------------------ Basic Ends Here ------------------
 
 // ================== Get From Something ==================
