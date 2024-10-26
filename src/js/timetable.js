@@ -58,7 +58,7 @@ onAuthStateChanged(auth, async (user) => {
         const userDocRef = doc(db, 'users_tablepref', user.email);
         if (userDocSnapTable !== false) {
             console.log('User data found:', userDocSnapTable);
-            if (JSON.stringify(userDocSnapTable) === JSON.stringify(timetableStoragePref)) {
+            if (JSON.stringify(userDocSnapTable) == JSON.stringify(timetableStoragePref)) {
                 return;
             } else {
                 // Update the user's tablepref field
@@ -70,7 +70,8 @@ onAuthStateChanged(auth, async (user) => {
                 } else {
                     timetableStoragePref = newData.tablepref;
                 }
-                location.reload();
+                //location.reload();
+                console.log("Reloaded")
             }
         } else {
             // Create a new user document if it doesn't exist
@@ -231,7 +232,7 @@ const handleLogin = () => {
                     console.log("newData",newData)
                     timetableStoragePref = newData;
                     lastMerge = JSON.parse(JSON.stringify(newData));
-                    updateLocalForage();
+                    updateUserData(newData);
                     location.reload();
                 }
             } else {
