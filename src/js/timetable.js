@@ -47,6 +47,7 @@ const provider = new GoogleAuthProvider();
 
 let userEmail = null;
 onAuthStateChanged(auth, async (user) => {
+    return;
     if (user) {
         userEmail = user.email;
         // Show user options and hide login button after successful login
@@ -105,6 +106,7 @@ function showUserOpt() {
 
 // Function to update the tablepref field in the user's document
 const updateUserData = async (newTablePref) => {
+    return;
     if (!userEmail) {
         console.error('No user logged in. Cannot update data.');
         return;
@@ -208,20 +210,22 @@ const mergeTables = (userTables, newTables) => {
 const handleLogin = () => {
     signInWithPopup(auth, provider)
         .then(async (result) => {
+            return;
+            console.error('Login error: Setup blocked');
             const user = result.user;
             console.log('Signed in as: ', user.email);
             // Try to get the user's document's field data from Firestore
             const userDocSnapTable = await getUserTablePref(user.email); // Await the promise
             const userDocRef = doc(db, 'users_tablepref', user.email);
             if (userDocSnapTable !== false) {
-                console.log('User data found:', userDocSnapTable);
+                //console.log('User data found:', userDocSnapTable);
                 if (JSON.stringify(userDocSnapTable) === JSON.stringify(timetableStoragePref)) {
                     return;
                 } else {
                     // Update the user's tablepref field
                     const newData=mergeTables(userDocSnapTable, timetableStoragePref);
                     await updateUserData(newData); // Await the update
-                    console.log("newData",newData)
+                    //console.log("newData",newData)
                     timetableStoragePref = newData;
                     lastMerge = JSON.parse(JSON.stringify(newData));
                     updateLocalForage();
@@ -693,7 +697,7 @@ const startAutoUpdate = (getNewTablePref) => {
 const getLatestTimetableStoragePref = () => timetableStoragePref;
 
 // Start the auto-update with a function that returns the latest timetableStoragePref
-startAutoUpdate(getLatestTimetableStoragePref);
+//startAutoUpdate(getLatestTimetableStoragePref);
 // ------------------ Basic Ends Here ------------------
 
 // ================== Get From Something ==================
@@ -3221,7 +3225,7 @@ function updateLocalForage() {
     localforage
         .setItem('timetableStoragePref', timetableStoragePref)
         .catch(console.error);
-    console.log(timetableStoragePref);
+    //console.log(timetableStoragePref);
     updateUserData(timetableStoragePref);
 }
 
