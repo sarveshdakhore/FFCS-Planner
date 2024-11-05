@@ -480,12 +480,11 @@ function isMorningLab(slots) {
     return false;
 }
 function addTeacher(courseName, teacherName, slotsInput, venueInput) {
+    console.log(teacherName, slotsInput);
     slotsInput = slotsInput.trim();
     slotsInput = slotsInput.toUpperCase();
     const isMorning = isMorningTheory(slotsInput);
-    if (isMorning == null) {
-        return null;
-    }
+    
     if (!teacherName.endsWith(' (E)')) {
         if (!isMorning) {
             teacherName = teacherName + ' (E)';
