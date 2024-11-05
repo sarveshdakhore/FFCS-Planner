@@ -355,21 +355,31 @@ function checkTeacherAndSlotsMatch(courseName, teacherName, slotString) {
     // Recursive helper function to generate a unique name and check slots
     function generateUniqueNameAndCheckSlots(baseName, counter = 1) {
         let uniqueName = counter === 1 ? baseName : `${baseName} ${counter}`;
+        console.log('Unique name:', uniqueName);
         const uniqueNameSlots = teachers[uniqueName]
             ? teachers[uniqueName].slots.split('+')
             : [];
+        console.log('Unique name slots:', uniqueNameSlots);
         if (doSlotsMatch(uniqueNameSlots, slots)) {
             // If the slots match, return false
             return false;
-        } else if (teachers.hasOwnProperty(uniqueName)) {
-            // If the unique name already exists, check for slots merge property
-            let Tslots = getTeacherSlots(courseName, teacherName);
+        }
+        else if (teachers.hasOwnProperty(uniqueName)) {
 
+            // If the unique name already exists, check for slots merge property
+            let Tslots = getTeacherSlots(courseName, uniqueName);
+            if(isTheory(Tslots) && Tslots.includes('L')){
+                console.log('Theory and Lab slots are not allowed to merge',uniqueName ,baseName,Tslots,slotString);
+                return generateUniqueNameAndCheckSlots(baseName, counter+1);
+            }
+            if (Tslots === null) {
+                return false;
+            }
             if (isTheory(Tslots) && !isTheory(slotString)) {
                 if (isMorningTheory(Tslots) && !isMorningLab(slotString)) {
                     updateTeacherSlots(
                         courseName,
-                        teacherName,
+                        uniqueName,
                         Tslots + '+' + slotString,
                     );
                     return true;
@@ -379,7 +389,7 @@ function checkTeacherAndSlotsMatch(courseName, teacherName, slotString) {
                 ) {
                     updateTeacherSlots(
                         courseName,
-                        teacherName,
+                        uniqueName,
                         Tslots + '+' + slotString,
                     );
                     return true;
@@ -388,7 +398,7 @@ function checkTeacherAndSlotsMatch(courseName, teacherName, slotString) {
                 if (isMorningTheory(slotString) && !isMorningLab(Tslots)) {
                     updateTeacherSlots(
                         courseName,
-                        teacherName,
+                        uniqueName,
                         slotString + '+' + Tslots,
                     );
                     return true;
@@ -398,7 +408,7 @@ function checkTeacherAndSlotsMatch(courseName, teacherName, slotString) {
                 ) {
                     updateTeacherSlots(
                         courseName,
-                        teacherName,
+                        uniqueName,
                         slotString + '+' + Tslots,
                     );
                     return true;
@@ -480,7 +490,7 @@ function isMorningLab(slots) {
     return false;
 }
 function addTeacher(courseName, teacherName, slotsInput, venueInput) {
-    console.log(teacherName, slotsInput);
+    //console.log(teacherName, slotsInput);
     slotsInput = slotsInput.trim();
     slotsInput = slotsInput.toUpperCase();
     const isMorning = isMorningTheory(slotsInput);
