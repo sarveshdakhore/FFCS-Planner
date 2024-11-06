@@ -1051,7 +1051,7 @@ function updateSlots(slots) {
                 if (clashMap[slot][i].includes('L')) {
                     labSlots.push(clashMap[slot][i]);
                 } else {
-                    thSlots.push(clashMap[slot][i]);
+                        thSlots.push(clashMap[slot][i]);
                 }
             }
         }
@@ -3817,7 +3817,7 @@ window.addCourseToTimetable = (courseData) => {
                 >`,
             );
         }
-        if (courseData.slots[0][0] == 'L') {
+        if (slot[0][0] == 'L') {
             $divElement.data('is-lab', true);
         } else {
             $divElement.data('is-theory', true);
