@@ -2198,6 +2198,9 @@ function closeEditPref1() {
     editTeacher = false;
     deactivateSortable();
 
+    // Re-enable search when exiting edit mode
+    document.getElementById('teacher-search-input').disabled = false;
+
     document.getElementById('edit_msg_').style.display = 'none';
     document.getElementById('div-for-edit-teacher').style.display = 'none';
     selectBackgroundRemovalOfPreviousH2s();
