@@ -1690,7 +1690,6 @@ function constructTeacherLi(courseName, subject) {
 
     // Sort teachers based on preference
     const sortedTeachers = sortTeachersByTime(teachersData);
-    console.log(`Sorting ${courseName} with preference: ${teacherSortPreference}`, sortedTeachers.map(t => t.teacherName));
 
     // Create LI elements from sorted teachers
     var result = [];
@@ -3175,7 +3174,6 @@ window.closeEditPref1 = closeEditPref1;
 window.fillLeftBoxInCoursePanel = fillLeftBoxInCoursePanel;
 window.setTeacherSortPreference = (value) => {
     teacherSortPreference = value;
-    console.log('Sort preference changed to:', value);
 
     // Save which dropdowns are currently open
     const openDropdowns = new Set();
@@ -4473,7 +4471,7 @@ document
         // Update the value of editSub based on the checkbox state
         editSub = this.checked;
         if (this.checked) {
-            // Course edit mode - disable collapse button
+            // Course edit mode - disable collapse button and search
             closeAllDropdowns();
             document.getElementById('div-for-edit-teacher').style.display =
                 'none';
@@ -4483,8 +4481,13 @@ document
             document.getElementById('tt-subject-collapse').disabled = true;
             document.getElementById('tt-subject-collapse').style.opacity = '0.5';
             document.getElementById('tt-subject-collapse').style.cursor = 'not-allowed';
+
+            // Disable and clear search
+            const searchInput = document.getElementById('teacher-search-input');
+            searchInput.disabled = true;
+            searchInput.value = '';
         } else {
-            // Teacher edit mode - enable collapse button
+            // Teacher edit mode - enable collapse button and search
             document.getElementById('div-for-edit-course').style.display =
                 'none';
             document.getElementById('div-for-edit-teacher').style.display =
@@ -4497,6 +4500,9 @@ document
             document.getElementById('tt-subject-collapse').disabled = false;
             document.getElementById('tt-subject-collapse').style.opacity = '1';
             document.getElementById('tt-subject-collapse').style.cursor = 'pointer';
+
+            // Re-enable search
+            document.getElementById('teacher-search-input').disabled = false;
         }
     });
 

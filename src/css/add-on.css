@@ -21,6 +21,13 @@
     border-color: #86b7fe;
 }
 
+#teacher-search-input:disabled,
+#teacher-sort-dropdown:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #e9ecef;
+}
+
 .search_btn_course {
     margin: 0 4px; /* Adjust the margin as desired */ /* Remove height property to allow button height to adjust */
     height: 2.1em;

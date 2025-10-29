@@ -72,6 +72,9 @@ document.getElementById('teacher-sort-dropdown').addEventListener('change', func
 
 // Event listener for teacher search input
 let searchTimeout;
+// Track which dropdowns were opened by search
+let searchOpenedDropdowns = new Set();
+
 document.getElementById('teacher-search-input').addEventListener('input', function() {
     const searchQuery = this.value.toLowerCase().trim();
 
@@ -86,8 +89,23 @@ document.getElementById('teacher-search-input').addEventListener('input', functi
 function searchTeachersInDOM(query) {
     const allTeacherLists = document.querySelectorAll('.dropdown-teacher');
 
+    // If starting a new search, record which dropdowns are already open
+    if (query !== '' && searchOpenedDropdowns.size === 0) {
+        allTeacherLists.forEach(dropdown => {
+            const dropdownList = dropdown.querySelector('.dropdown-list');
+            if (dropdownList && dropdownList.classList.contains('show')) {
+                const courseName = dropdown.querySelector('.cname').textContent;
+                // Mark as already open (not opened by search)
+                searchOpenedDropdowns.add('existing:' + courseName);
+            }
+        });
+    }
+
     allTeacherLists.forEach(dropdown => {
         const teacherItems = dropdown.querySelectorAll('.dropdown-list li');
+        const dropdownList = dropdown.querySelector('.dropdown-list');
+        const dropdownHeading = dropdown.querySelector('.dropdown-heading');
+        const courseName = dropdown.querySelector('.cname').textContent;
         let hasVisibleTeacher = false;
 
         teacherItems.forEach(li => {
@@ -111,6 +129,29 @@ function searchTeachersInDOM(query) {
             dropdown.style.display = 'none';
         } else {
             dropdown.style.display = '';
+        }
+
+        // Open/close dropdown based on search state
+        if (query !== '') {
+            // If searching and has results, open the dropdown
+            if (hasVisibleTeacher && !dropdownList.classList.contains('show')) {
+                dropdownList.classList.add('show');
+                dropdownHeading.classList.add('open');
+                searchOpenedDropdowns.add('search:' + courseName);
+            }
+        } else {
+            // If search cleared, restore all teachers' visibility
+            teacherItems.forEach(li => {
+                li.style.display = '';
+            });
+
+            // Only close dropdowns that were opened by search
+            if (searchOpenedDropdowns.has('search:' + courseName)) {
+                dropdownList.classList.remove('show');
+                dropdownHeading.classList.remove('open');
+            }
+            // Clear the tracking set
+            searchOpenedDropdowns.clear();
         }
     });
 }
