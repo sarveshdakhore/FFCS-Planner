@@ -1582,29 +1582,82 @@ function createTeacherLI(teacherData) {
     return li;
 }
 
-// Function to sort teachers by time (morning/evening)
+// Function to sort teachers by time (morning/evening), then color, then preserve order
 // Teachers with (E) in their name are evening teachers
+// Colors: Green (rgb(214, 255, 214)) → Orange (rgb(255, 228, 135)) → Red (rgb(255, 205, 205))
 function sortTeachersByTime(teachersArray) {
-    if (teacherSortPreference === 'none') {
-        return teachersArray;
+    // Helper function to get color priority (lower number = higher priority)
+    function getColorPriority(color) {
+        switch (color) {
+            case 'rgb(214, 255, 214)': return 1; // Green
+            case 'rgb(255, 228, 135)': return 2; // Orange
+            case 'rgb(255, 205, 205)': return 3; // Red
+            default: return 1; // Unknown color treated as Green
+        }
     }
 
-    const morningTeachers = [];
-    const eveningTeachers = [];
+    if (teacherSortPreference === 'none') {
+        // Sort by color only, preserve order within each color
+        const greenTeachers = [];
+        const orangeTeachers = [];
+        const redTeachers = [];
+
+        teachersArray.forEach(teacher => {
+            const colorPriority = getColorPriority(teacher.color);
+            if (colorPriority === 1) {
+                greenTeachers.push(teacher);
+            } else if (colorPriority === 2) {
+                orangeTeachers.push(teacher);
+            } else {
+                redTeachers.push(teacher);
+            }
+        });
+
+        return [...greenTeachers, ...orangeTeachers, ...redTeachers];
+    }
+
+    // Sort by time first, then by color within each time group
+    const morningGreen = [];
+    const morningOrange = [];
+    const morningRed = [];
+    const eveningGreen = [];
+    const eveningOrange = [];
+    const eveningRed = [];
 
     teachersArray.forEach(teacher => {
         const teacherName = teacher.teacherName;
-        if (teacherName.includes('(E)')) {
-            eveningTeachers.push(teacher);
+        const isEvening = teacherName.includes('(E)');
+        const colorPriority = getColorPriority(teacher.color);
+
+        if (isEvening) {
+            if (colorPriority === 1) {
+                eveningGreen.push(teacher);
+            } else if (colorPriority === 2) {
+                eveningOrange.push(teacher);
+            } else {
+                eveningRed.push(teacher);
+            }
         } else {
-            morningTeachers.push(teacher);
+            if (colorPriority === 1) {
+                morningGreen.push(teacher);
+            } else if (colorPriority === 2) {
+                morningOrange.push(teacher);
+            } else {
+                morningRed.push(teacher);
+            }
         }
     });
 
     if (teacherSortPreference === 'morning') {
-        return [...morningTeachers, ...eveningTeachers];
+        return [
+            ...morningGreen, ...morningOrange, ...morningRed,
+            ...eveningGreen, ...eveningOrange, ...eveningRed
+        ];
     } else if (teacherSortPreference === 'evening') {
-        return [...eveningTeachers, ...morningTeachers];
+        return [
+            ...eveningGreen, ...eveningOrange, ...eveningRed,
+            ...morningGreen, ...morningOrange, ...morningRed
+        ];
     }
 
     return teachersArray;
@@ -1637,6 +1690,7 @@ function constructTeacherLi(courseName, subject) {
 
     // Sort teachers based on preference
     const sortedTeachers = sortTeachersByTime(teachersData);
+    console.log(`Sorting ${courseName} with preference: ${teacherSortPreference}`, sortedTeachers.map(t => t.teacherName));
 
     // Create LI elements from sorted teachers
     var result = [];
@@ -2226,12 +2280,8 @@ function rearrangeTeacherLiInSubjectArea(courseName) {
     var consideredSlots = subtractArray(slotsOfCourse, activeSlots);
     var nonActiveTeacherLi = [];
     var activeTeacherLi = [];
-    var actGreen = [];
-    var actRed = [];
-    var actOrange = [];
-    var nactGreen = [];
-    var nactRed = [];
-    var nactOrange = [];
+
+    // Separate active and non-active teachers
     allTeacherLi.forEach((teacherLi) => {
         const teacherSlot = slotsProcessingForCourseList(
             teacherLi.querySelectorAll('div')[1].innerText,
@@ -2248,51 +2298,104 @@ function rearrangeTeacherLiInSubjectArea(courseName) {
             activeTeacherLi.push(teacherLi);
         }
     });
-    // get the ul under that course name in subject area
-    activeTeacherLi.forEach((teacherLi) => {
-        var color = teacherLi.style.backgroundColor;
-        switch (color) {
-            case 'rgb(214, 255, 214)': // Green
-                return actGreen.push(teacherLi);
-            case 'rgb(255, 228, 135)': // Orange
-                return actOrange.push(teacherLi);
-            case 'rgb(255, 205, 205)': // Red
-                return actRed.push(teacherLi);
-            default:
-                return actGreen.push(teacherLi); // Unknown color
-        }
-    });
-    nonActiveTeacherLi.forEach((teacherLi) => {
-        var color = teacherLi.style.backgroundColor;
-        switch (color) {
-            case 'rgb(214, 255, 214)': // Green
-                return nactGreen.push(teacherLi);
-            case 'rgb(255, 228, 135)': // Orange
-                return nactOrange.push(teacherLi);
-            case 'rgb(255, 205, 205)': // Red
-                return nactRed.push(teacherLi);
-            default:
-                return nactGreen.push(teacherLi); // Unknown color
-        }
-    });
 
+    // Helper function to sort teacher LI elements with 3-priority system
+    function sortTeacherLiElements(teacherLiArray) {
+        if (teacherSortPreference === 'none') {
+            // Sort by color only
+            const green = [];
+            const orange = [];
+            const red = [];
+
+            teacherLiArray.forEach((li) => {
+                const color = li.style.backgroundColor;
+                switch (color) {
+                    case 'rgb(214, 255, 214)': // Green
+                        green.push(li);
+                        break;
+                    case 'rgb(255, 228, 135)': // Orange
+                        orange.push(li);
+                        break;
+                    case 'rgb(255, 205, 205)': // Red
+                        red.push(li);
+                        break;
+                    default:
+                        green.push(li); // Unknown color
+                }
+            });
+
+            return [...green, ...orange, ...red];
+        } else {
+            // Sort by time first, then color
+            const morningGreen = [];
+            const morningOrange = [];
+            const morningRed = [];
+            const eveningGreen = [];
+            const eveningOrange = [];
+            const eveningRed = [];
+
+            teacherLiArray.forEach((li) => {
+                const teacherName = li.querySelectorAll('div')[0].textContent;
+                const isEvening = teacherName.includes('(E)');
+                const color = li.style.backgroundColor;
+
+                if (isEvening) {
+                    switch (color) {
+                        case 'rgb(214, 255, 214)':
+                            eveningGreen.push(li);
+                            break;
+                        case 'rgb(255, 228, 135)':
+                            eveningOrange.push(li);
+                            break;
+                        case 'rgb(255, 205, 205)':
+                            eveningRed.push(li);
+                            break;
+                        default:
+                            eveningGreen.push(li);
+                    }
+                } else {
+                    switch (color) {
+                        case 'rgb(214, 255, 214)':
+                            morningGreen.push(li);
+                            break;
+                        case 'rgb(255, 228, 135)':
+                            morningOrange.push(li);
+                            break;
+                        case 'rgb(255, 205, 205)':
+                            morningRed.push(li);
+                            break;
+                        default:
+                            morningGreen.push(li);
+                    }
+                }
+            });
+
+            if (teacherSortPreference === 'morning') {
+                return [
+                    ...morningGreen, ...morningOrange, ...morningRed,
+                    ...eveningGreen, ...eveningOrange, ...eveningRed
+                ];
+            } else if (teacherSortPreference === 'evening') {
+                return [
+                    ...eveningGreen, ...eveningOrange, ...eveningRed,
+                    ...morningGreen, ...morningOrange, ...morningRed
+                ];
+            }
+        }
+
+        return teacherLiArray;
+    }
+
+    // Sort both active and non-active groups
+    const sortedActive = sortTeacherLiElements(activeTeacherLi);
+    const sortedNonActive = sortTeacherLiElements(nonActiveTeacherLi);
+
+    // Rebuild the list: active teachers first, then non-active
     ul.innerHTML = '';
-    actGreen.forEach((teacherLi) => {
+    sortedActive.forEach((teacherLi) => {
         ul.appendChild(teacherLi);
     });
-    actOrange.forEach((teacherLi) => {
-        ul.appendChild(teacherLi);
-    });
-    actRed.forEach((teacherLi) => {
-        ul.appendChild(teacherLi);
-    });
-    nactGreen.forEach((teacherLi) => {
-        ul.appendChild(teacherLi);
-    });
-    nactOrange.forEach((teacherLi) => {
-        ul.appendChild(teacherLi);
-    });
-    nactRed.forEach((teacherLi) => {
+    sortedNonActive.forEach((teacherLi) => {
         ul.appendChild(teacherLi);
     });
 }
@@ -2322,29 +2425,9 @@ function revertRerrange() {
             allSubject[subjectNameStr],
         );
         ulToUpdate.innerHTML = '';
-        var teacherLiGreen = [];
-        var teacherLiOrange = [];
-        var teacherLiRed = [];
+        // Teachers are already sorted by sortTeachersByTime() in constructTeacherLi()
+        // with proper time → color → order priority, so just append them
         TeacherLi.forEach((li) => {
-            var color = li.style.backgroundColor;
-            switch (color) {
-                case 'rgb(214, 255, 214)': // Green
-                    return teacherLiGreen.push(li);
-                case 'rgb(255, 228, 135)': // Orange
-                    return teacherLiOrange.push(li);
-                case 'rgb(255, 205, 205)': // Red
-                    return teacherLiRed.push(li);
-                default:
-                    return teacherLiGreen.push(li); // Unknown color
-            }
-        });
-        teacherLiGreen.forEach((li) => {
-            ulToUpdate.appendChild(li);
-        });
-        teacherLiOrange.forEach((li) => {
-            ulToUpdate.appendChild(li);
-        });
-        teacherLiRed.forEach((li) => {
             ulToUpdate.appendChild(li);
         });
         makeRadioTrueOnPageLoad();
@@ -3092,6 +3175,7 @@ window.closeEditPref1 = closeEditPref1;
 window.fillLeftBoxInCoursePanel = fillLeftBoxInCoursePanel;
 window.setTeacherSortPreference = (value) => {
     teacherSortPreference = value;
+    console.log('Sort preference changed to:', value);
 
     // Save which dropdowns are currently open
     const openDropdowns = new Set();
@@ -3109,6 +3193,9 @@ window.setTeacherSortPreference = (value) => {
 
     // Rebuild the panel with new sort order
     fillLeftBoxInCoursePanel();
+
+    // Restore radio button selections based on activeTable.data
+    makeRadioTrueOnPageLoad();
 
     // Restore open/closed state
     document.querySelectorAll('.dropdown-teacher').forEach((dropdown) => {
