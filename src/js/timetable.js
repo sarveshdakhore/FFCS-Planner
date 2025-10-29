@@ -2122,10 +2122,19 @@ function editPref() {
     document.getElementById('tt-subject-collapse').style.opacity = '1';
     document.getElementById('tt-subject-collapse').style.cursor = 'pointer';
 
+    // Preserve search query before rebuilding DOM
+    const searchInput = document.getElementById('teacher-search-input');
+    const currentSearchQuery = searchInput.value.toLowerCase().trim();
+
     openAllDropdowns();
     removeEventListeners();
     revertRerrange();
     removeInputFieldsInSection('subjectArea');
+
+    // Re-apply search filter if there was an active search
+    if (currentSearchQuery && window.searchTeachersInDOM) {
+        window.searchTeachersInDOM(currentSearchQuery);
+    }
     // Add event listeners to .h2s div elements
     document.querySelectorAll('.h2s').forEach((div) => {
         div.addEventListener('click', function () {
@@ -2231,6 +2240,10 @@ function closeEditPref() {
     document.getElementById('tt-subject-collapse').style.opacity = '1';
     document.getElementById('tt-subject-collapse').style.cursor = 'pointer';
 
+    // Preserve search query before rebuilding DOM
+    const searchInput = document.getElementById('teacher-search-input');
+    const currentSearchQuery = searchInput.value.toLowerCase().trim();
+
     createSubjectJsonFromHtml();
     addEventListeners();
     revertRerrange();
@@ -2238,6 +2251,11 @@ function closeEditPref() {
     showAddTeacherDiv();
     document.getElementById('edit_msg_').innerText =
         'Click on the Teacher to edit it.';
+
+    // Re-apply search filter if there was an active search
+    if (currentSearchQuery && window.searchTeachersInDOM) {
+        window.searchTeachersInDOM(currentSearchQuery);
+    }
 }
 
 // What happens after clicking on li element anywhere
@@ -3192,6 +3210,10 @@ window.setTeacherSortPreference = (value) => {
     const subjectArea = document.getElementById('subjectArea');
     const scrollTop = subjectArea.scrollTop;
 
+    // Save search query
+    const searchInput = document.getElementById('teacher-search-input');
+    const currentSearchQuery = searchInput.value.toLowerCase().trim();
+
     // Rebuild the panel with new sort order
     fillLeftBoxInCoursePanel();
 
@@ -3212,6 +3234,11 @@ window.setTeacherSortPreference = (value) => {
 
     // Restore scroll position
     subjectArea.scrollTop = scrollTop;
+
+    // Re-apply search filter if there was an active search
+    if (currentSearchQuery && window.searchTeachersInDOM) {
+        window.searchTeachersInDOM(currentSearchQuery);
+    }
 };
 
 /*
