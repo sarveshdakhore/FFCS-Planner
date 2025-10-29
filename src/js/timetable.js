@@ -13,6 +13,7 @@ window.clashMap = clashMap;
 slotsExistInNonLectureFormat.add('');
 slotsExistInNonLectureFormat.add('SLOTS');
 let lastMerge = null;
+let teacherSortPreference = 'none'; // Options: 'none', 'morning', 'evening'
 // ********************* Global Functions *********************
 
 // ================== Sign in/Sign up ==================
@@ -622,6 +623,266 @@ function addMultipleTeacher() {
     updateLocalForage();
 }
 
+// ================== Add Multiple Courses ==================
+
+// Detect course code from columns (position-independent)
+// Pattern: 3-4 uppercase letters + 3-4 digits + optional L/P
+function detectCourseCode(columns) {
+    const courseCodePattern = /^[A-Z]{3,4}\d{3,4}[LP]?$/;
+    for (let col of columns) {
+        const trimmed = col.trim();
+        if (courseCodePattern.test(trimmed)) {
+            return trimmed;
+        }
+    }
+    return null;
+}
+
+// Detect course name from columns
+// Find longest text > 10 characters, excluding course code, numbers, and keywords
+function detectCourseName(columns, excludeColumns) {
+    const keywords = [
+        'MANDATORY', 'ELECTIVE', 'BTECH', 'BTech', 'B.TECH',
+        'THEORY', 'LAB', 'LABORATORY', 'PRACTICAL',
+        'SEMESTER', 'SEM', 'CREDIT', 'CREDITS'
+    ];
+
+    let longestName = '';
+
+    for (let col of columns) {
+        const trimmed = col.trim();
+
+        // Skip if empty or in exclude list
+        if (!trimmed || excludeColumns.includes(trimmed)) continue;
+
+        // Skip if it's just a number
+        if (!isNaN(trimmed)) continue;
+
+        // Skip if it matches keywords
+        const upperCol = trimmed.toUpperCase();
+        if (keywords.some(kw => upperCol.includes(kw))) continue;
+
+        // Keep longest name > 10 characters
+        if (trimmed.length > 10 && trimmed.length > longestName.length) {
+            longestName = trimmed;
+        }
+    }
+
+    return longestName || null;
+}
+
+// Detect credits from columns (only to the right of course name)
+function detectCredits(columns, nameIndex) {
+    if (nameIndex === -1) return 4; // Default if name not found
+
+    // Look only to the right of course name
+    const rightColumns = columns.slice(nameIndex + 1);
+    const numbers = rightColumns
+        .map(col => parseFloat(col.trim()))
+        .filter(num => !isNaN(num) && num >= 0 && num < 15);
+
+    // Strategy 1: L-T-P-J-C sequence (5 consecutive numbers)
+    if (numbers.length >= 5) {
+        return parseCreditValue(numbers[4]); // Take 5th number (C)
+    }
+
+    // Strategy 2: Single number
+    if (numbers.length > 0) {
+        return parseCreditValue(numbers[0]);
+    }
+
+    // Strategy 3: Default
+    return 4;
+}
+
+// Parse courses from pasted text
+function parseCoursesFromText(text) {
+    const lines = text.trim().split('\n');
+    const parsedCourses = [];
+
+    for (let line of lines) {
+        if (!line.trim()) continue;
+
+        // Split by tabs OR 2+ spaces
+        const columns = line.split(/\t+|\s{2,}/).filter(col => col.trim());
+
+        if (columns.length < 2) continue;
+
+        // Detect course code
+        const courseCode = detectCourseCode(columns);
+        if (!courseCode) continue; // Skip line if no valid course code
+
+        // Detect course name
+        const courseName = detectCourseName(columns, [courseCode]);
+        if (!courseName) continue; // Skip line if no valid course name
+
+        // Detect credits
+        const nameIndex = columns.findIndex(col => col.trim() === courseName);
+        const credits = detectCredits(columns, nameIndex);
+
+        // Extract metadata
+        const baseCode = courseCode.replace(/[LP]$/, '');
+        const isTheory = courseCode.endsWith('L');
+        const isLab = courseCode.endsWith('P');
+
+        parsedCourses.push({
+            code: courseCode,
+            baseCode: baseCode,
+            name: courseName,
+            credits: credits,
+            isTheory: isTheory,
+            isLab: isLab
+        });
+    }
+
+    return parsedCourses;
+}
+
+// Group theory and lab courses
+function groupTheoryAndLabCourses(courses) {
+    const grouped = [];
+    const processedLabs = new Set();
+
+    // First pass: Process theory courses and combine with labs
+    for (let course of courses) {
+        if (course.isTheory) {
+            // Find matching lab course
+            const labCourse = courses.find(c =>
+                c.isLab && c.baseCode === course.baseCode
+            );
+
+            // Create a new course object with combined credits
+            const combinedCourse = {
+                code: course.code,
+                baseCode: course.baseCode,
+                name: course.name,
+                credits: course.credits, // Start with theory credits
+                isTheory: course.isTheory,
+                isLab: course.isLab
+            };
+
+            if (labCourse) {
+                // Combine credits: theory + lab
+                const theoryCredits = parseFloat(course.credits) || 0;
+                const labCredits = parseFloat(labCourse.credits) || 0;
+                const totalCredits = theoryCredits + labCredits;
+                combinedCourse.credits = parseCreditValue(totalCredits);
+                processedLabs.add(labCourse.code);
+                console.log(`Combined ${course.code}: Theory(${theoryCredits}) + Lab(${labCredits}) = ${combinedCourse.credits}`);
+            }
+
+            grouped.push(combinedCourse);
+        }
+    }
+
+    // Second pass: Add standalone lab courses (lab without theory)
+    for (let course of courses) {
+        if (course.isLab && !processedLabs.has(course.code)) {
+            // Check if there's a theory course with same baseCode
+            const hasTheory = courses.some(c =>
+                c.isTheory && c.baseCode === course.baseCode
+            );
+
+            if (!hasTheory) {
+                grouped.push(course);
+            }
+        }
+    }
+
+    return grouped;
+}
+
+// Main function to add multiple courses
+function addMultipleCourses() {
+    const textarea = document.getElementById('courses-multiple-input');
+    const textValue = textarea.value;
+
+    if (!textValue.trim()) {
+        alert('Please paste course data');
+        return;
+    }
+
+    // Parse courses
+    const parsedCourses = parseCoursesFromText(textValue);
+    if (parsedCourses.length === 0) {
+        alert('No valid courses found. Please check the format.');
+        return;
+    }
+
+    // Group theory and lab courses
+    const groupedCourses = groupTheoryAndLabCourses(parsedCourses);
+
+    let addedCount = 0;
+    let skippedCount = 0;
+    const skippedCourses = [];
+
+    // Add each course
+    for (let course of groupedCourses) {
+        const fullCourseName = `${course.code} - ${course.name}`;
+        const processedName = processRawCourseName(fullCourseName);
+
+        // Check if course already exists
+        const existingCourses = timetableStoragePref[window.activeTable.id].subject || {};
+        const exists = Object.keys(existingCourses)
+            .map(key => key.toLowerCase())
+            .includes(processedName.toLowerCase());
+
+        if (exists) {
+            skippedCount++;
+            skippedCourses.push(course.code);
+            continue;
+        }
+
+        // Add course to data structure
+        if (!timetableStoragePref[window.activeTable.id].hasOwnProperty('subject')) {
+            timetableStoragePref[window.activeTable.id]['subject'] = {};
+        }
+
+        const subject = { teacher: {}, credits: course.credits };
+        timetableStoragePref[window.activeTable.id].subject[processedName] = subject;
+
+        console.log(`Adding course: ${processedName} with ${course.credits} credits`);
+
+        // Add to UI
+        const dropdown = createSubjectDropdown(processedName, subject);
+        document.getElementById('subjectArea').appendChild(dropdown);
+
+        addedCount++;
+    }
+
+    // Clear textarea
+    textarea.value = '';
+
+    // Update storage
+    updateLocalForage();
+
+    // Show success message
+    const spanCourseAddSuccess = document.getElementById('span-course-add');
+    document.getElementById('hide_br').style.display = 'none';
+
+    let message = `${addedCount} course(s) added successfully.`;
+    if (skippedCount > 0) {
+        message += ` ${skippedCount} course(s) skipped (already exist): ${skippedCourses.join(', ')}`;
+    }
+
+    spanCourseAddSuccess.style.color = 'green';
+    spanCourseAddSuccess.style.fontWeight = 'bolder';
+    spanCourseAddSuccess.textContent = message;
+
+    setTimeout(() => {
+        spanCourseAddSuccess.textContent = '';
+        document.getElementById('hide_br').style.display = 'inline';
+    }, 7000);
+}
+
+// Open modal for multiple courses
+function openModalForMultipleCourses() {
+    const modal = new bootstrap.Modal(
+        document.getElementById('multiple-course-modal')
+    );
+    modal.show();
+}
+
 // To toggle the dropdown
 function toggleDropdown(dropdownHeading) {
     if (editSub === false) {
@@ -687,6 +948,10 @@ function openAllDropdowns() {
 // on click of button with id 'tt-subject-collapse'
 // button : 'Collapse All'
 function editPrefCollapse() {
+    // Don't allow collapse during edit mode
+    if (editTeacher || editSub) {
+        return;
+    }
     closeAllDropdowns();
 }
 // Function to run updateUserData every 1 minute
@@ -1182,7 +1447,12 @@ function makeRadioTrueOnPageLoad() {
         }
         var faculty = courseData.faculty;
         var teacherLi = getTeacherLiInSubjectArea(courseName, faculty);
-        teacherLi.querySelector('input[type="radio"]').checked = true;
+        if (teacherLi) {
+            var radioInput = teacherLi.querySelector('input[type="radio"]');
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+        }
     });
 }
 
@@ -1202,7 +1472,12 @@ function makeRadioFalseOnNeed() {
         }
         var faculty = courseData.faculty;
         var teacherLi = getTeacherLiInSubjectArea(courseName, faculty);
-        teacherLi.querySelector('input[type="radio"]').checked = false;
+        if (teacherLi) {
+            var radioInput = teacherLi.querySelector('input[type="radio"]');
+            if (radioInput) {
+                radioInput.checked = false;
+            }
+        }
     });
 }
 
@@ -1307,10 +1582,39 @@ function createTeacherLI(teacherData) {
     return li;
 }
 
+// Function to sort teachers by time (morning/evening)
+// Teachers with (E) in their name are evening teachers
+function sortTeachersByTime(teachersArray) {
+    if (teacherSortPreference === 'none') {
+        return teachersArray;
+    }
+
+    const morningTeachers = [];
+    const eveningTeachers = [];
+
+    teachersArray.forEach(teacher => {
+        const teacherName = teacher.teacherName;
+        if (teacherName.includes('(E)')) {
+            eveningTeachers.push(teacher);
+        } else {
+            morningTeachers.push(teacher);
+        }
+    });
+
+    if (teacherSortPreference === 'morning') {
+        return [...morningTeachers, ...eveningTeachers];
+    } else if (teacherSortPreference === 'evening') {
+        return [...eveningTeachers, ...morningTeachers];
+    }
+
+    return teachersArray;
+}
+
 // to build the teacher li item from course name and subject element
 // activeTable.subject['CourseName'] is the subject element
 function constructTeacherLi(courseName, subject) {
-    var result = [];
+    // First, collect all teacher data
+    var teachersData = [];
     for (const teacherName in subject.teacher) {
         var slotsInput = subject.teacher[teacherName].slots;
         var venueInput = subject.teacher[teacherName].venue;
@@ -1328,9 +1632,19 @@ function constructTeacherLi(courseName, subject) {
             color: colorInput,
             teacherName: teacherName,
         };
+        teachersData.push(teacherData);
+    }
+
+    // Sort teachers based on preference
+    const sortedTeachers = sortTeachersByTime(teachersData);
+
+    // Create LI elements from sorted teachers
+    var result = [];
+    sortedTeachers.forEach(teacherData => {
         const li = createTeacherLI(teacherData);
         result.push(li);
-    }
+    });
+
     return result;
 }
 
@@ -1731,6 +2045,7 @@ function editPrefAddOn() {
     activateSortable();
     document.getElementById('edit_msg_').style.display = 'block';
     document.getElementById('div-for-edit-teacher').style.display = 'none';
+    // Collapse button state is managed by course/teacher edit toggle
 }
 function editPref() {
     if ($('#attack-toggle').is(':checked')) {
@@ -1748,6 +2063,12 @@ function editPref() {
     document.getElementById('tt-subject-done').style.display = 'block';
     document.getElementById('tt-sub-edit-switch-div').style.display = 'block';
     document.getElementById('edit_msg_').style.display = 'block';
+
+    // Enable collapse button for teacher edit mode (default state when entering edit)
+    document.getElementById('tt-subject-collapse').disabled = false;
+    document.getElementById('tt-subject-collapse').style.opacity = '1';
+    document.getElementById('tt-subject-collapse').style.cursor = 'pointer';
+
     openAllDropdowns();
     removeEventListeners();
     revertRerrange();
@@ -1827,6 +2148,11 @@ function closeEditPref1() {
     document.getElementById('edit_msg_').style.display = 'none';
     document.getElementById('div-for-edit-teacher').style.display = 'none';
     selectBackgroundRemovalOfPreviousH2s();
+
+    // Re-enable collapse button after exiting edit mode
+    document.getElementById('tt-subject-collapse').disabled = false;
+    document.getElementById('tt-subject-collapse').style.opacity = '1';
+    document.getElementById('tt-subject-collapse').style.cursor = 'pointer';
 }
 
 // close the edit view
@@ -1834,7 +2160,8 @@ function closeEditPref() {
     document.getElementById('tt-subject-edit').style.display = 'block';
     document.getElementById('tt-subject-add').style.display = 'block';
     document.getElementById('tt-teacher-add').style.display = 'block';
-    document.getElementById('tt-subject-collapse').style.display = 'none';
+    // Keep collapse button always visible
+    // document.getElementById('tt-subject-collapse').style.display = 'none';
     document.getElementById('tt-subject-done').style.display = 'none';
     document.getElementById('div-for-add-teacher').style.display = 'block';
     document.getElementById('tt-sub-edit-switch-div').style.display = 'none';
@@ -1842,6 +2169,12 @@ function closeEditPref() {
     document.getElementById('div-for-edit-course').style.display = 'none';
     document.getElementById('div-for-edit-teacher').style.display = 'none';
     editSub = false;
+
+    // Re-enable collapse button after exiting edit mode
+    document.getElementById('tt-subject-collapse').disabled = false;
+    document.getElementById('tt-subject-collapse').style.opacity = '1';
+    document.getElementById('tt-subject-collapse').style.cursor = 'pointer';
+
     createSubjectJsonFromHtml();
     addEventListeners();
     revertRerrange();
@@ -2121,7 +2454,12 @@ function makeRadioTrueAttack() {
         var courseName = getCourseNameFromCourseData(courseData);
         var faculty = courseData.faculty;
         var teacherLi = getTeacherLiInSubjectArea(courseName, faculty);
-        teacherLi.querySelector('input[type="radio"]').checked = true;
+        if (teacherLi) {
+            var radioInput = teacherLi.querySelector('input[type="radio"]');
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+        }
     });
 }
 function revertRerrangeAttack() {
@@ -2459,6 +2797,37 @@ function showOccupiedSlots() {
 
 // ================== File Processing ==================
 
+// Normalize colors from other versions to current version colors
+function normalizeColors(tableData) {
+    const colorMap = {
+        // Other version colors (hex)
+        '#0d3320': 'rgb(214, 255, 214)', // Green
+        '#4a2c0f': 'rgb(255, 228, 135)', // Orange
+        '#3d1a1a': 'rgb(255, 205, 205)', // Red
+        // Legacy colors (hex)
+        '#1a4d2e': 'rgb(214, 255, 214)', // Green
+        '#8b4513': 'rgb(255, 228, 135)', // Orange
+        '#7a1a1a': 'rgb(255, 205, 205)', // Red
+    };
+
+    // Normalize colors in subject.teacher
+    if (tableData.subject) {
+        Object.keys(tableData.subject).forEach(subjectName => {
+            const subject = tableData.subject[subjectName];
+            if (subject.teacher) {
+                Object.keys(subject.teacher).forEach(teacherName => {
+                    const teacher = subject.teacher[teacherName];
+                    if (teacher.color && colorMap[teacher.color.toLowerCase()]) {
+                        teacher.color = colorMap[teacher.color.toLowerCase()];
+                    }
+                });
+            }
+        });
+    }
+
+    return tableData;
+}
+
 // on upload tt file it process the file and update the activeTable
 // and updates front end
 function processFile(file) {
@@ -2475,6 +2844,10 @@ function processFile(file) {
 
         // Parse the JSON string back into an object
         var activeTableUpdate = JSON.parse(jsonStr);
+
+        // Normalize colors from other versions
+        activeTableUpdate = normalizeColors(activeTableUpdate);
+
         activeTableUpdate.id = activeTable.id;
         activeTableUpdate.name = activeTable.name;
         timetableStoragePref[activeTable.id] = activeTableUpdate;
@@ -2549,6 +2922,85 @@ function onPageLoad() {
         'click',
         addMultipleTeacher,
     );
+
+    // Add Multiple Courses button and modal listeners
+    var addMultipleCourseButton = document.getElementById('addMultipleCourse');
+    addMultipleCourseButton.addEventListener('click', openModalForMultipleCourses);
+
+    var confirmMultipleCoursesButton = document.getElementById(
+        'confirm-multiple-courses-button',
+    );
+    confirmMultipleCoursesButton.addEventListener('click', addMultipleCourses);
+
+    // Add event listener to the Live FFCS toggle checkbox
+    document
+        .querySelector('#attack-toggle')
+        .addEventListener('change', function () {
+            // Update the value of editSub based on the checkbox state
+            if (this.checked) {
+                activateSortable();
+                revertRerrange();
+                closeEditPref();
+                closeEditPref1();
+                document.getElementById('div-for-edit-teacher').style.display =
+                    'none';
+                document.getElementById('edit_msg_').style.display = 'block';
+                document.getElementById('edit_msg_').innerText =
+                    'Live FFCS Mode Enabled.';
+                document.getElementById('tt-subject-edit').style.display = 'none';
+                document.getElementById('tt-subject-add').style.display = 'none';
+                document.getElementById('tt-teacher-add').style.display = 'none';
+                document.getElementById('tt-subject-collapse').style.display =
+                    'block';
+                document.getElementById('tt-subject-done').style.display = 'none';
+                document.getElementById('div-for-add-teacher').style.display =
+                    'none';
+                document.getElementById('tt-sub-edit-switch-div').style.display =
+                    'none';
+                document.getElementById('tt-sub-edit-switch').checked = false;
+                document.getElementById('div-for-edit-course').style.display =
+                    'none';
+                document.getElementById('div-for-edit-teacher').style.display =
+                    'none';
+                document.getElementById('div-auto-focus').style.display = 'block';
+                closeAllDropdowns();
+                try {
+                    document.querySelector('.dropdown-list').classList.add('show');
+                    document
+                        .querySelector('.dropdown-list')
+                        .previousElementSibling.classList.add('open');
+                } catch (error) {}
+
+                revertRerrangeAttack();
+                rearrangeTeacherRefreshAttack();
+                removeEventListeners();
+                makeRadioFalseOnNeed();
+                document.getElementById('div-for-attack-slot').style.display =
+                    'flex';
+                showOccupiedSlots();
+                clearTimetable();
+                clearCourseList();
+                makeRadioTrueAttack();
+                fillPage();
+            } else {
+                document.getElementById('div-auto-focus').style.display = 'none';
+
+                document.getElementById('edit_msg_').innerText =
+                    'Click on the Teacher to edit it.';
+                document.getElementById('edit_msg_').style.display = 'none';
+                removeEventListenersAttack();
+                revertRerrange();
+                closeEditPref();
+                activateSortable();
+                closeEditPref1();
+                document.getElementById('div-for-attack-slot').style.display =
+                    'none';
+                clearTimetable();
+                clearCourseList();
+                fillPage();
+            }
+        });
+
     const userOptDiv = document.getElementById('user-opt');
     userOptDiv.style.display = 'none';
 }
@@ -2637,6 +3089,42 @@ window.removeInputFieldsInSection = removeInputFieldsInSection;
 window.removeDotsLive = removeDotsLive;
 window.editPrefAddOn = editPrefAddOn;
 window.closeEditPref1 = closeEditPref1;
+window.fillLeftBoxInCoursePanel = fillLeftBoxInCoursePanel;
+window.setTeacherSortPreference = (value) => {
+    teacherSortPreference = value;
+
+    // Save which dropdowns are currently open
+    const openDropdowns = new Set();
+    document.querySelectorAll('.dropdown-teacher').forEach((dropdown) => {
+        const courseName = dropdown.querySelector('.cname').textContent;
+        const dropdownList = dropdown.querySelector('.dropdown-list');
+        if (dropdownList && dropdownList.classList.contains('show')) {
+            openDropdowns.add(courseName);
+        }
+    });
+
+    // Save scroll position
+    const subjectArea = document.getElementById('subjectArea');
+    const scrollTop = subjectArea.scrollTop;
+
+    // Rebuild the panel with new sort order
+    fillLeftBoxInCoursePanel();
+
+    // Restore open/closed state
+    document.querySelectorAll('.dropdown-teacher').forEach((dropdown) => {
+        const courseName = dropdown.querySelector('.cname').textContent;
+        const dropdownList = dropdown.querySelector('.dropdown-list');
+        const dropdownHeading = dropdown.querySelector('.dropdown-heading');
+
+        if (openDropdowns.has(courseName)) {
+            dropdownList.classList.add('show');
+            dropdownHeading.classList.add('open');
+        }
+    });
+
+    // Restore scroll position
+    subjectArea.scrollTop = scrollTop;
+};
 
 /*
  *  This file contains the events and functions applied to
@@ -3898,13 +4386,18 @@ document
         // Update the value of editSub based on the checkbox state
         editSub = this.checked;
         if (this.checked) {
+            // Course edit mode - disable collapse button
             closeAllDropdowns();
             document.getElementById('div-for-edit-teacher').style.display =
                 'none';
             document.getElementById('edit_msg_').style.display = 'block';
             document.getElementById('edit_msg_').innerText =
                 'Click on the Course to edit it.';
+            document.getElementById('tt-subject-collapse').disabled = true;
+            document.getElementById('tt-subject-collapse').style.opacity = '0.5';
+            document.getElementById('tt-subject-collapse').style.cursor = 'not-allowed';
         } else {
+            // Teacher edit mode - enable collapse button
             document.getElementById('div-for-edit-course').style.display =
                 'none';
             document.getElementById('div-for-edit-teacher').style.display =
@@ -3914,6 +4407,9 @@ document
                 'Click on the Teacher to edit it.';
             selectBackgroundRemovalOfPreviousH2s();
             selectBackgroundRemovalOfPreviousLi();
+            document.getElementById('tt-subject-collapse').disabled = false;
+            document.getElementById('tt-subject-collapse').style.opacity = '1';
+            document.getElementById('tt-subject-collapse').style.cursor = 'pointer';
         }
     });
 
@@ -4546,74 +5042,8 @@ function constructCourseDataAttack() {
     });
 }
 
-// Add event listener to the toggle checkbox
-document
-    .querySelector('#attack-toggle')
-    .addEventListener('change', function () {
-        // Update the value of editSub based on the checkbox state
-        if (this.checked) {
-            activateSortable();
-            revertRerrange();
-            closeEditPref();
-            closeEditPref1();
-            document.getElementById('div-for-edit-teacher').style.display =
-                'none';
-            document.getElementById('edit_msg_').style.display = 'block';
-            document.getElementById('edit_msg_').innerText =
-                'Live FFCS Mode Enabled.';
-            document.getElementById('tt-subject-edit').style.display = 'none';
-            document.getElementById('tt-subject-add').style.display = 'none';
-            document.getElementById('tt-teacher-add').style.display = 'none';
-            document.getElementById('tt-subject-collapse').style.display =
-                'block';
-            document.getElementById('tt-subject-done').style.display = 'none';
-            document.getElementById('div-for-add-teacher').style.display =
-                'none';
-            document.getElementById('tt-sub-edit-switch-div').style.display =
-                'none';
-            document.getElementById('tt-sub-edit-switch').checked = false;
-            document.getElementById('div-for-edit-course').style.display =
-                'none';
-            document.getElementById('div-for-edit-teacher').style.display =
-                'none';
-            document.getElementById('div-auto-focus').style.display = 'block';
-            closeAllDropdowns();
-            try {
-                document.querySelector('.dropdown-list').classList.add('show');
-                document
-                    .querySelector('.dropdown-list')
-                    .previousElementSibling.classList.add('open');
-            } catch (error) {}
-
-            revertRerrangeAttack();
-            rearrangeTeacherRefreshAttack();
-            removeEventListeners();
-            makeRadioFalseOnNeed();
-            document.getElementById('div-for-attack-slot').style.display =
-                'flex';
-            showOccupiedSlots();
-            clearTimetable();
-            clearCourseList();
-            makeRadioTrueAttack();
-            fillPage();
-        } else {
-            document.getElementById('div-auto-focus').style.display = 'none';
-
-            document.getElementById('edit_msg_').innerText =
-                'Click on the Teacher to edit it.';
-            document.getElementById('edit_msg_').style.display = 'none';
-            removeEventListenersAttack();
-            revertRerrange();
-            closeEditPref();
-            activateSortable();
-            closeEditPref1();
-            document.getElementById('div-for-attack-slot').style.display =
-                'none';
-            clearTimetable();
-            clearCourseList();
-            fillPage();
-        }
-    });
+// NOTE: Attack toggle event listener moved to onPageLoad() function for proper DOM initialization
+// The listener is now attached inside onPageLoad() at line ~2923
 document
     .getElementById('save-panel-button')
     .addEventListener('click', function () {

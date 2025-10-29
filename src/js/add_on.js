@@ -61,3 +61,56 @@ document.querySelectorAll('.right-box form').forEach((form) => {
         event.preventDefault();
     });
 });
+
+// Event listener for teacher sort dropdown
+document.getElementById('teacher-sort-dropdown').addEventListener('change', function() {
+    const sortValue = this.value;
+    if (window.setTeacherSortPreference) {
+        window.setTeacherSortPreference(sortValue);
+    }
+});
+
+// Event listener for teacher search input
+let searchTimeout;
+document.getElementById('teacher-search-input').addEventListener('input', function() {
+    const searchQuery = this.value.toLowerCase().trim();
+
+    // Debounce the search to avoid too many DOM updates
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchTeachersInDOM(searchQuery);
+    }, 300);
+});
+
+// Function to search teachers in the DOM
+function searchTeachersInDOM(query) {
+    const allTeacherLists = document.querySelectorAll('.dropdown-teacher');
+
+    allTeacherLists.forEach(dropdown => {
+        const teacherItems = dropdown.querySelectorAll('.dropdown-list li');
+        let hasVisibleTeacher = false;
+
+        teacherItems.forEach(li => {
+            const teacherName = li.querySelectorAll('div')[0]?.textContent.toLowerCase() || '';
+            const slots = li.querySelectorAll('div')[1]?.textContent.toLowerCase() || '';
+            const venue = li.querySelectorAll('div')[2]?.textContent.toLowerCase() || '';
+
+            if (query === '' ||
+                teacherName.includes(query) ||
+                slots.includes(query) ||
+                venue.includes(query)) {
+                li.style.display = '';
+                hasVisibleTeacher = true;
+            } else {
+                li.style.display = 'none';
+            }
+        });
+
+        // Show/hide the entire dropdown based on whether it has visible teachers
+        if (query !== '' && !hasVisibleTeacher) {
+            dropdown.style.display = 'none';
+        } else {
+            dropdown.style.display = '';
+        }
+    });
+}
