@@ -155,3 +155,6 @@ function searchTeachersInDOM(query) {
         }
     });
 }
+
+// Export the search function to be accessible from timetable.js
+window.searchTeachersInDOM = searchTeachersInDOM;

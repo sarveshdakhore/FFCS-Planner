@@ -4485,10 +4485,14 @@ document
             document.getElementById('tt-subject-collapse').style.opacity = '0.5';
             document.getElementById('tt-subject-collapse').style.cursor = 'not-allowed';
 
-            // Disable and clear search
+            // Clear and disable search
             const searchInput = document.getElementById('teacher-search-input');
-            searchInput.disabled = true;
             searchInput.value = '';
+            // Trigger search clear to restore visibility and close search-opened dropdowns
+            if (window.searchTeachersInDOM) {
+                window.searchTeachersInDOM('');
+            }
+            searchInput.disabled = true;
         } else {
             // Teacher edit mode - enable collapse button and search
             document.getElementById('div-for-edit-course').style.display =
